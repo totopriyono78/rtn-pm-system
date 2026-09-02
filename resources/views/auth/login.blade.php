@@ -73,5 +73,41 @@
             <x-icon name="shield" class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
             <span>Akun hanya dibuat oleh Administrator. Hubungi Admin jika Anda belum memiliki akses.</span>
         </div>
+
+        @if (config('demo.show_accounts'))
+            <div class="mt-4 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+                <div class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                    <x-icon name="users" class="h-3.5 w-3.5" />
+                    Akun Demo
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="text-amber-700/60">
+                                <th class="pb-1.5 pr-2 font-medium">Role</th>
+                                <th class="pb-1.5 pr-2 font-medium">Email</th>
+                                <th class="pb-1.5 font-medium">Password</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (config('demo.accounts') as $account)
+                                <tr class="cursor-pointer border-t border-amber-100 transition-colors hover:bg-amber-100/50"
+                                    title="Klik untuk isi form otomatis"
+                                    onclick="document.getElementById('email').value='{{ $account['email'] }}'; document.getElementById('password').value='{{ config('demo.password') }}';">
+                                    <td class="py-1.5 pr-2 text-slate-600">{{ $account['role'] }}</td>
+                                    <td class="py-1.5 pr-2 font-medium text-slate-700">{{ $account['email'] }}</td>
+                                    <td class="py-1.5 font-mono text-slate-500">{{ config('demo.password') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="mt-2.5 text-[11px] leading-relaxed text-amber-700/70">
+                    Klik salah satu baris untuk mengisi form secara otomatis.
+                </p>
+            </div>
+        @endif
     </div>
 @endsection

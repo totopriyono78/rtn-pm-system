@@ -24,7 +24,7 @@
             <x-nav-link :href="route('purchasing.items')" :active="request()->routeIs('purchasing.items')" icon="cube" label="Master Item" />
         @endcan
         <x-nav-link :href="route('purchasing.vendors')" :active="request()->routeIs('purchasing.vendors*')" icon="store" label="Vendor" />
-        <x-nav-link :href="route('purchasing.rfq')" :active="request()->routeIs('purchasing.rfq*')" icon="doc-text" label="Request for Quotation" />
+        <x-nav-link :href="route('purchasing.rfq')" :active="request()->routeIs('purchasing.rfq*')" icon="doc-text" label="Request for Quotation" :badge="$pendingApprovalCount > 0 ? $pendingApprovalCount : null" />
         <x-nav-link :href="route('purchasing.po')" :active="request()->routeIs('purchasing.po*')" icon="truck" label="Purchase Order" />
         <x-nav-link :href="route('purchasing.tracking')" :active="request()->routeIs('purchasing.tracking')" icon="package" label="Material Tracking" />
     @endcanany

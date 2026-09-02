@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['project_id', 'name', 'status', 'planned_hours', 'order_no'])]
+#[Fillable(['project_id', 'name', 'status', 'planned_hours', 'order_no', 'start_date', 'end_date'])]
 class Activity extends Model
 {
     use HasFactory;
@@ -18,6 +18,25 @@ class Activity extends Model
         'sedang_dikerjakan' => 'Sedang Dikerjakan',
         'selesai' => 'Selesai',
     ];
+
+    /**
+     * Kelas warna Tailwind (utuh, bukan hasil interpolasi dinamis, supaya
+     * ikut ter-scan oleh Tailwind JIT) dipakai konsisten di bar Gantt Chart
+     * dan legenda-nya.
+     */
+    public const STATUS_BAR_CLASS = [
+        'belum_dimulai' => 'bg-slate-400',
+        'sedang_dikerjakan' => 'bg-indigo-500',
+        'selesai' => 'bg-emerald-500',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
 
     public function project(): BelongsTo
     {

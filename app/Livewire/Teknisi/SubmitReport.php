@@ -7,6 +7,7 @@ use App\Models\Report;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -15,7 +16,15 @@ class SubmitReport extends Component
 {
     use WithFileUploads;
 
+    /**
+     * Diisi otomatis lewat query string (?assignmentId=...) saat masuk dari tombol
+     * "Isi Laporan" di halaman Jadwal Saya, supaya teknisi tidak perlu memilih lagi.
+     * Tetap bisa diganti manual kalau salah klik.
+     */
+    #[Url]
     public string $assignmentId = '';
+
+    public bool $showCompletedActivities = false;
 
     public string $type = 'daily';
 
@@ -45,6 +54,19 @@ class SubmitReport extends Component
     {
         $assignments = Assignment::where('user_id', Auth::id())
             ->with('activity.project')
+            ->when(! $this->showCompletedActivities, function ($q) {
+                // Activity yang sudah "selesai" disembunyikan dari pilihan supaya daftar
+                // tidak terus bertambah panjang, tapi penugasan yang masih berjalan tetap
+                // muncul walau sudah pernah dilaporkan (mis. laporan harian untuk pekerjaan
+                // multi-hari) — satu penugasan wajar punya beberapa laporan sebelum selesai.
+                $q->where(function ($q2) {
+                    $q2->whereHas('activity', fn ($qa) => $qa->where('status', '!=', 'selesai'));
+
+                    if ($this->assignmentId !== '') {
+                        $q2->orWhere('id', $this->assignmentId);
+                    }
+                });
+            })
             ->orderByDesc('scheduled_date')
             ->get();
 

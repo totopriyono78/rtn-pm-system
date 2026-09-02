@@ -14,6 +14,10 @@
                 @endforeach
             </select>
             @error('assignmentId') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+            <label class="mt-1.5 flex items-center gap-2 text-xs text-slate-500">
+                <input type="checkbox" wire:model.live="showCompletedActivities" class="rounded border-slate-300">
+                Tampilkan juga penugasan yang activity-nya sudah Selesai
+            </label>
         </div>
 
         <div>

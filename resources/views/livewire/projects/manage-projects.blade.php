@@ -61,34 +61,38 @@
 
     @if ($showModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showModal', false)">
-            <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-                <h3 class="mb-4 text-lg font-semibold text-slate-800">{{ $editingId ? 'Edit Proyek' : 'Tambah Proyek' }}</h3>
+            <div class="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+                <h3 class="mb-5 text-lg font-semibold text-slate-800">{{ $editingId ? 'Edit Proyek' : 'Tambah Proyek' }}</h3>
                 <form wire:submit="save" class="space-y-4">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Nama Proyek</label>
                         <input type="text" wire:model="name" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
                         @error('name') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                     </div>
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Lokasi (Unit)</label>
-                        <select wire:model="unitId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                            <option value="">-- pilih unit --</option>
-                            @foreach ($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->region->code }} - {{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('unitId') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Lokasi (Unit)</label>
+                            <select wire:model="unitId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                <option value="">-- pilih unit --</option>
+                                @foreach ($units as $unit)
+                                    <option value="{{ $unit->id }}">{{ $unit->region->code }} - {{ $unit->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('unitId') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">PIC</label>
+                            <select wire:model="picUserId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                <option value="">-- tanpa PIC --</option>
+                                @foreach ($pics as $pic)
+                                    <option value="{{ $pic->id }}">{{ $pic->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">PIC</label>
-                        <select wire:model="picUserId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                            <option value="">-- tanpa PIC --</option>
-                            @foreach ($pics as $pic)
-                                <option value="{{ $pic->id }}">{{ $pic->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Tanggal Mulai</label>
                             <input type="date" wire:model="startDate" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -98,19 +102,51 @@
                             <input type="date" wire:model="endDate" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
                             @error('endDate') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                         </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Status</label>
+                            <select wire:model="status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                @foreach (\App\Models\Project::STATUSES as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Budget Proyek (Rp)</label>
+                            <div class="relative">
+                                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-slate-400">Rp</span>
+                                <input type="number" step="0.01" min="0" wire:model="budget" placeholder="Kosongkan jika tidak dibatasi"
+                                    class="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm">
+                            </div>
+                            <p class="mt-1 text-xs text-slate-400">Batas maksimal total nilai Purchase Order yang boleh diterbitkan Purchasing untuk proyek ini.</p>
+                            @error('budget') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Deskripsi</label>
+                            <textarea wire:model="description" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+                        </div>
+                    </div>
+
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Status</label>
-                        <select wire:model="status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                            @foreach (\App\Models\Project::STATUSES as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Dokumen Proyek</label>
+                        <input type="file" wire:model="newDocuments" multiple class="block w-full text-sm">
+                        <div wire:loading wire:target="newDocuments" class="text-xs text-slate-400">Mengunggah...</div>
+                        @error('newDocuments.*') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+
+                        @if ($existingDocuments->isNotEmpty())
+                            <ul class="mt-2 space-y-1">
+                                @foreach ($existingDocuments as $doc)
+                                    <li class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
+                                        <a href="{{ route('projects.documents.show', $doc) }}" class="truncate text-indigo-600 hover:underline" target="_blank">{{ $doc->original_name }}</a>
+                                        <button type="button" wire:click="removeDocument({{ $doc->id }})" wire:confirm="Hapus dokumen ini?" class="ml-2 shrink-0 text-red-500 hover:underline">Hapus</button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
                     </div>
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Deskripsi</label>
-                        <textarea wire:model="description" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
-                    </div>
+
                     <div class="flex justify-end gap-2 pt-2">
                         <button type="button" wire:click="$set('showModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Batal</button>
                         <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Simpan</button>

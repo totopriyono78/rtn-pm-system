@@ -85,10 +85,53 @@ class RequestForQuotation extends Model
         return $this->items->isNotEmpty() && $this->items->every(fn (RfqItem $line) => $line->awarded_vendor_quotation_item_id !== null);
     }
 
+    /**
+     * Total nilai seluruh baris item yang sudah punya vendor pemenang
+     * (harga hasil negosiasi terakhir). Ini nilai yang akan menjadi komitmen
+     * Purchase Order kalau RFQ ini disetujui.
+     */
+    public function getAwardedTotalAttribute(): float
+    {
+        return (float) $this->items
+            ->filter(fn (RfqItem $line) => $line->awardedVendorQuotationItem !== null)
+            ->sum(fn (RfqItem $line) => (float) $line->awardedVendorQuotationItem->subtotal);
+    }
+
+    /**
+     * Pastikan total penawaran RFQ ini tidak membuat total pembelian proyek
+     * melebihi budget yang ditetapkan (kalau proyeknya diberi budget).
+     * Dipanggil saat Purchasing mengajukan approval dan sekali lagi saat
+     * Direktur menyetujui (jaga-jaga ada RFQ lain yang sudah lebih dulu
+     * memakai budget di antara kedua langkah tersebut).
+     */
+    protected function assertWithinBudget(): void
+    {
+        $project = $this->project;
+
+        if ($project->budget === null) {
+            return;
+        }
+
+        $alreadyCommitted = (float) $project->purchaseOrders()->where('status', 'issued')->sum('total');
+        $projected = $alreadyCommitted + $this->awarded_total;
+
+        if ($projected > (float) $project->budget) {
+            $remaining = max(0, (float) $project->budget - $alreadyCommitted);
+
+            abort(400, sprintf(
+                'Total penawaran RFQ ini (Rp %s) melebihi sisa budget proyek. Sisa budget saat ini: Rp %s dari total budget Rp %s.',
+                number_format($this->awarded_total, 0, ',', '.'),
+                number_format($remaining, 0, ',', '.'),
+                number_format((float) $project->budget, 0, ',', '.')
+            ));
+        }
+    }
+
     public function submitForApproval(User $user): void
     {
         abort_unless($this->status === 'draft', 400, 'Hanya RFQ berstatus draft yang dapat diajukan.');
         abort_unless($this->isFullyAwarded(), 400, 'Pilih vendor pemenang untuk setiap item terlebih dahulu.');
+        $this->assertWithinBudget();
 
         $this->status = 'submitted';
         $this->submitted_at = now();
@@ -104,6 +147,7 @@ class RequestForQuotation extends Model
     public function approve(User $approver): void
     {
         abort_unless($this->status === 'submitted', 400, 'Hanya RFQ berstatus menunggu approval yang dapat disetujui.');
+        $this->assertWithinBudget();
 
         DB::transaction(function () use ($approver) {
             $this->status = 'approved';

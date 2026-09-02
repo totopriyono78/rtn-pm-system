@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\PurchaseOrderPrintController;
 use App\Http\Controllers\ReportFileController;
 use App\Livewire\Admin\ManageLocations;
@@ -48,6 +49,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // ===== Project Management =====
     Route::get('/projects', ManageProjects::class)->name('projects.index');
     Route::get('/projects/{project}', ProjectDetail::class)->name('projects.show');
+    Route::get('/projects/documents/{projectDocument}', ProjectDocumentController::class)->name('projects.documents.show');
 
     // ===== Modul Teknisi =====
     Route::middleware('permission:submit-report')->group(function () {

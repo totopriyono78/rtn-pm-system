@@ -41,15 +41,36 @@
         @endif
 
         @if ($pendingApprovals !== null)
-            <div class="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+            @php $hasPending = $pendingApprovals->count() > 0; @endphp
+            <a
+                href="{{ route('purchasing.rfq', ['statusFilter' => 'submitted']) }}"
+                @class([
+                    'relative flex items-start gap-4 rounded-2xl border p-5 shadow-sm transition-colors',
+                    'border-amber-200 bg-amber-50 hover:bg-amber-100' => $hasPending,
+                    'border-slate-100 bg-white hover:bg-slate-50' => ! $hasPending,
+                ])
+            >
+                @if ($hasPending)
+                    <span class="absolute right-3 top-3 flex h-2.5 w-2.5">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                    </span>
+                @endif
+                <div @class([
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                    'bg-amber-100 text-amber-600' => $hasPending,
+                    'bg-violet-50 text-violet-600' => ! $hasPending,
+                ])>
                     <x-icon name="doc-text" class="h-5 w-5" />
                 </div>
                 <div class="min-w-0">
-                    <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Menunggu Approval</div>
-                    <div class="mt-1 text-2xl font-semibold text-slate-800">{{ $pendingApprovals->count() }}</div>
+                    <div @class(['text-xs font-medium uppercase tracking-wide', 'text-amber-700' => $hasPending, 'text-slate-400' => ! $hasPending])>Menunggu Approval</div>
+                    <div @class(['mt-1 text-2xl font-semibold', 'text-amber-800' => $hasPending, 'text-slate-800' => ! $hasPending])>{{ $pendingApprovals->count() }}</div>
+                    @if ($hasPending)
+                        <div class="mt-0.5 text-xs font-medium text-amber-700">Perlu tindakan Anda &rarr;</div>
+                    @endif
                 </div>
-            </div>
+            </a>
         @endif
     </div>
 
@@ -72,15 +93,21 @@
             @endif
 
             @if ($pendingApprovals !== null && $pendingApprovals->isNotEmpty())
-                <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                    <h3 class="mb-3 text-sm font-semibold text-slate-700">Menunggu Persetujuan Anda</h3>
+                <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            Menunggu Persetujuan Anda
+                            <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-white">{{ $pendingApprovals->count() }}</span>
+                        </h3>
+                        <a href="{{ route('purchasing.rfq', ['statusFilter' => 'submitted']) }}" class="text-xs font-medium text-indigo-600 hover:underline">Lihat semua</a>
+                    </div>
                     @foreach ($pendingApprovals as $q)
-                        <div class="flex items-center justify-between border-t border-slate-100 py-2.5 text-sm first:border-0">
+                        <div class="flex items-center justify-between border-t border-amber-100 py-2.5 text-sm first:border-0">
                             <div class="min-w-0">
                                 <div class="truncate font-medium text-slate-800">{{ $q->code }}</div>
                                 <div class="truncate text-slate-500">{{ $q->project->name }}</div>
                             </div>
-                            <a href="{{ route('purchasing.rfq.show', $q) }}" class="shrink-0 text-indigo-600 hover:underline">Tinjau</a>
+                            <a href="{{ route('purchasing.rfq.show', $q) }}" class="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Tinjau &amp; Setujui</a>
                         </div>
                     @endforeach
                 </div>

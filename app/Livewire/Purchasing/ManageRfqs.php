@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -18,6 +19,7 @@ class ManageRfqs extends Component
 {
     use WithPagination;
 
+    #[Url]
     public string $statusFilter = '';
 
     public bool $showModal = false;
@@ -28,6 +30,11 @@ class ManageRfqs extends Component
 
     /** @var array<int, array{item_id: string, qty: string}> */
     public array $lines = [];
+
+    public function updatedStatusFilter(): void
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {

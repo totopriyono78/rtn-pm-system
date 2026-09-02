@@ -100,15 +100,16 @@ class DemoDataSeeder extends Seeder
             'pic_user_id' => $pmJbb->id,
             'name' => 'Performance Test Tangki 31T-101',
             'description' => 'Pengujian performa tangki penyimpanan 31T-101.',
+            'budget' => 50000000,
             'start_date' => now()->subDays(10),
             'end_date' => now()->addDays(20),
             'status' => 'ongoing',
         ]);
 
-        $act1 = Activity::create(['project_id' => $project1->id, 'name' => 'Site Survey', 'status' => 'selesai', 'planned_hours' => 16, 'order_no' => 1]);
-        $act2 = Activity::create(['project_id' => $project1->id, 'name' => 'Pelaksanaan Pekerjaan', 'status' => 'sedang_dikerjakan', 'planned_hours' => 80, 'order_no' => 2]);
-        Activity::create(['project_id' => $project1->id, 'name' => 'Commissioning', 'status' => 'belum_dimulai', 'planned_hours' => 24, 'order_no' => 3]);
-        Activity::create(['project_id' => $project1->id, 'name' => 'FAT', 'status' => 'belum_dimulai', 'planned_hours' => 8, 'order_no' => 4]);
+        $act1 = Activity::create(['project_id' => $project1->id, 'name' => 'Site Survey', 'status' => 'selesai', 'planned_hours' => 16, 'order_no' => 1, 'start_date' => now()->subDays(10), 'end_date' => now()->subDays(8)]);
+        $act2 = Activity::create(['project_id' => $project1->id, 'name' => 'Pelaksanaan Pekerjaan', 'status' => 'sedang_dikerjakan', 'planned_hours' => 80, 'order_no' => 2, 'start_date' => now()->subDays(7), 'end_date' => now()->addDays(5)]);
+        Activity::create(['project_id' => $project1->id, 'name' => 'Commissioning', 'status' => 'belum_dimulai', 'planned_hours' => 24, 'order_no' => 3, 'start_date' => now()->addDays(6), 'end_date' => now()->addDays(12)]);
+        Activity::create(['project_id' => $project1->id, 'name' => 'FAT', 'status' => 'belum_dimulai', 'planned_hours' => 8, 'order_no' => 4, 'start_date' => now()->addDays(13), 'end_date' => now()->addDays(20)]);
 
         $project2 = Project::create([
             'unit_id' => $itBalongan->id,

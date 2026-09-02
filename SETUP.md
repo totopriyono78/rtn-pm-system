@@ -90,10 +90,12 @@ Semua akun memakai password: **`password`**
 
 **Segera ganti password semua akun setelah instalasi**, terutama sebelum dipakai di server production.
 
+Untuk memudahkan demo, halaman login menampilkan tabel akun-akun di atas di bagian bawah form (klik salah satu baris untuk mengisi email & password otomatis). Tabel ini otomatis **tidak tampil** saat `APP_ENV=production`, dan bisa diatur eksplisit lewat variabel `SHOW_DEMO_ACCOUNTS` di `.env` (`true`/`false`) — pastikan ini `false` (atau biarkan `APP_ENV=production`) sebelum sistem dipakai dengan data pengguna sungguhan.
+
 ## Struktur Modul yang Sudah Diimplementasikan
 
 - **Autentikasi & User Management** — login berbasis session, halaman Admin > Kelola User (tambah/edit/nonaktifkan akun, assign role, permission override per individu, pembatasan region).
-- **Project Management** — hierarki Region → Unit → Proyek → Activity, CRUD proyek, progress bar & status activity.
+- **Project Management** — hierarki Region → Unit → Proyek → Activity, CRUD proyek, progress bar & status activity. Proyek bisa diberi **budget** (opsional, kosongkan untuk tidak dibatasi) dan **dokumen pendukung** (kontrak, SOW, dll, boleh lebih dari satu file). Budget dipakai sebagai batas maksimal total nilai Purchase Order yang boleh diterbitkan Purchasing untuk proyek tersebut — RFQ yang diajukan/disetujui akan ditolak sistem kalau melebihi sisa budget. Detail proyek menampilkan Total Budget, Actual Penggunaan, dan Sisa Budget (nominal + persentase) bagi user dengan permission `view-harga`.
 - **Modul Teknisi** — jadwal penugasan, submit laporan (daily/final) dengan upload PDF/DOCX/foto/video, tersimpan otomatis per proyek (folder Daily Report/Final Report/Foto/Drawing).
 - **KPI & Work Log** — dashboard Direktur: jam kerja hari ini (bar chart), akumulasi harian/mingguan/bulanan, drill-down per karyawan, rencana vs aktual per proyek.
 - **Purchasing** — master item & vendor; alur pengadaan: Request for Quotation (RFQ) berisi daftar kebutuhan material/jasa per proyek → Purchasing input penawaran dari beberapa vendor untuk dibandingkan → harga bisa diperbarui untuk mencatat hasil negosiasi → pilih vendor pemenang per baris item (bisa berbeda vendor untuk item berbeda) → ajukan ke Direktur → setelah approve, sistem otomatis menerbitkan satu Purchase Order per vendor terpilih beserta cetakan resmi (PDF via print browser) → Material Tracking dibuat otomatis per baris PO, status Ordered → Shipping → Arrived → Installed. Halaman Vendor menampilkan riwayat RFQ yang diikuti dan PO yang pernah diterbitkan ke vendor tersebut. Visibilitas harga dikontrol permission `view-harga`.

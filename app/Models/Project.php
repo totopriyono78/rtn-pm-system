@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['unit_id', 'pic_user_id', 'name', 'description', 'start_date', 'end_date', 'status'])]
+#[Fillable(['unit_id', 'pic_user_id', 'name', 'description', 'budget', 'start_date', 'end_date', 'status'])]
 class Project extends Model
 {
     use HasFactory;
@@ -20,6 +20,7 @@ class Project extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'budget' => 'decimal:2',
         ];
     }
 
@@ -63,6 +64,42 @@ class Project extends Model
     public function materialTrackings(): HasMany
     {
         return $this->hasMany(MaterialTracking::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ProjectDocument::class);
+    }
+
+    /**
+     * Total nilai Purchase Order yang sudah diterbitkan (status issued) untuk
+     * proyek ini — dipakai sebagai "actual penggunaan" budget.
+     */
+    public function getUsedBudgetAttribute(): float
+    {
+        return (float) $this->purchaseOrders->where('status', 'issued')->sum('total');
+    }
+
+    public function getRemainingBudgetAttribute(): ?float
+    {
+        if ($this->budget === null) {
+            return null;
+        }
+
+        return (float) $this->budget - $this->used_budget;
+    }
+
+    /**
+     * Persentase budget yang sudah terpakai. Null kalau proyek tidak diberi
+     * budget (dianggap tidak dibatasi).
+     */
+    public function getBudgetUsagePercentAttribute(): ?float
+    {
+        if ($this->budget === null || (float) $this->budget <= 0) {
+            return null;
+        }
+
+        return round(($this->used_budget / (float) $this->budget) * 100, 1);
     }
 
     /**
