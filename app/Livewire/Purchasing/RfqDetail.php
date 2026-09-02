@@ -53,7 +53,7 @@ class RfqDetail extends Component
     public function render()
     {
         $this->rfq->load([
-            'project',
+            'project.purchaseOrders',
             'items.item',
             'items.awardedVendorQuotationItem.vendorQuotation.vendor',
             'items.vendorQuotationItems.vendorQuotation.vendor',

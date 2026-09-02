@@ -189,8 +189,57 @@
             </div>
 
             @if ($canViewHarga)
+                @php
+                    $rfqTotal = $rfq->items->sum(fn ($l) => $l->awardedVendorQuotationItem->subtotal);
+                    $rfqProject = $rfq->project;
+                    $projectedRemaining = $rfqProject->budget !== null ? $rfqProject->remaining_budget - $rfqTotal : null;
+                    $projectedPct = ($rfqProject->budget !== null && (float) $rfqProject->budget > 0)
+                        ? round((($rfqProject->used_budget + $rfqTotal) / (float) $rfqProject->budget) * 100, 1)
+                        : null;
+                @endphp
                 <div class="mt-4 text-right text-sm font-semibold text-slate-700">
-                    Total Keseluruhan: Rp {{ number_format($rfq->items->sum(fn ($l) => $l->awardedVendorQuotationItem->subtotal), 0, ',', '.') }}
+                    Total Keseluruhan: Rp {{ number_format($rfqTotal, 0, ',', '.') }}
+                </div>
+
+                {{-- ===== Info budget proyek — pertimbangan Direktur sebelum approve ===== --}}
+                <div class="mt-4 rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                    <div class="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <x-icon name="wallet" class="h-3.5 w-3.5" /> Budget Proyek: {{ $rfqProject->name }}
+                    </div>
+                    @if ($rfqProject->budget === null)
+                        <p class="text-sm text-slate-400">Proyek ini tidak diberi batas budget (tidak dibatasi).</p>
+                    @else
+                        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            <div>
+                                <div class="text-xs text-slate-400">Total Budget</div>
+                                <div class="mt-0.5 text-sm font-semibold text-slate-800">Rp {{ number_format($rfqProject->budget, 0, ',', '.') }}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400">Sudah Terpakai</div>
+                                <div class="mt-0.5 text-sm font-semibold text-slate-800">Rp {{ number_format($rfqProject->used_budget, 0, ',', '.') }}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400">Sisa Saat Ini</div>
+                                <div class="mt-0.5 text-sm font-semibold {{ $rfqProject->remaining_budget < 0 ? 'text-red-600' : 'text-slate-800' }}">Rp {{ number_format($rfqProject->remaining_budget, 0, ',', '.') }}</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400">Sisa Jika RFQ Ini Disetujui</div>
+                                <div class="mt-0.5 text-sm font-semibold {{ $projectedRemaining < 0 ? 'text-red-600' : 'text-emerald-700' }}">Rp {{ number_format($projectedRemaining, 0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                        @if ($projectedPct !== null)
+                            <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                @php $barColor = $projectedPct > 100 ? 'bg-red-500' : ($projectedPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'); @endphp
+                                <div class="h-2 rounded-full {{ $barColor }}" style="width: {{ min(100, $projectedPct) }}%"></div>
+                            </div>
+                            <p class="mt-1.5 text-[11px] text-slate-400">Proyeksi penggunaan budget bila RFQ ini disetujui: {{ $projectedPct }}% dari total budget proyek.</p>
+                        @endif
+                        @if ($projectedRemaining < 0)
+                            <p class="mt-2 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                                <x-icon name="alert-circle" class="h-3.5 w-3.5" /> Menyetujui RFQ ini akan membuat total penggunaan melebihi budget proyek.
+                            </p>
+                        @endif
+                    @endif
                 </div>
             @endif
 

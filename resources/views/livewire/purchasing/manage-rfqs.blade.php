@@ -26,8 +26,8 @@
                         <th class="pb-2">Kode</th>
                         <th class="pb-2">Proyek</th>
                         <th class="pb-2">Dibuat oleh</th>
-                        <th class="pb-2 text-right">Jumlah Item</th>
-                        <th class="pb-2">Status</th>
+                        <th class="pb-2 pr-6 text-right">Jumlah Item</th>
+                        <th class="pb-2 pl-2">Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,8 +38,8 @@
                             </td>
                             <td class="py-2">{{ $rfq->project->name }}</td>
                             <td class="py-2 text-slate-500">{{ $rfq->creator->name ?? '-' }}</td>
-                            <td class="py-2 text-right">{{ $rfq->items_count }}</td>
-                            <td class="py-2"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\RequestForQuotation::STATUSES[$rfq->status] }}</span></td>
+                            <td class="py-2 pr-6 text-right">{{ $rfq->items_count }}</td>
+                            <td class="py-2 pl-2"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\RequestForQuotation::STATUSES[$rfq->status] }}</span></td>
                         </tr>
                     @empty
                         <tr><td colspan="5"><x-empty-state icon="doc-text" title="Belum ada RFQ." /></td></tr>
