@@ -12,6 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Railway (and most PaaS providers) terminate TLS at their edge proxy and
+        // forward plain HTTP to the container, adding X-Forwarded-* headers.
+        // Without trusting that proxy, Laravel thinks every request is HTTP,
+        // so asset()/Vite/url() generate http:// links -> browsers block them
+        // as mixed content on an https:// page. Trusting all proxies is safe
+        // here because the container is only reachable through Railway's edge.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
