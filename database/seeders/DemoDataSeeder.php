@@ -80,6 +80,18 @@ class DemoDataSeeder extends Seeder
             'is_active' => true,
         ]);
         $management->assignRole('Management');
+        // Role "Management" sengaja tanpa permission default (lihat RolePermissionSeeder —
+        // sesuai SRS bab 3: "Dikonfigurasi sesuai kebutuhan perusahaan, oleh Administrator").
+        // Untuk akun demo ini, berikan contoh clearance individual (view-only, tanpa hak
+        // approve) sebagaimana lazimnya kebutuhan tim Management memantau seluruh proyek —
+        // pola yang sama dengan override VIEW_HARGA pada $pmJbt di atas.
+        $management->givePermissionTo([
+            'view-all-project',
+            'view-reports',
+            'view-kpi-team',
+            'view-purchasing',
+            'view-harga',
+        ]);
 
         // ===== Regions & Units =====
         $jbb = Region::create(['code' => 'JBB', 'name' => 'Region Jawa Bagian Barat']);
