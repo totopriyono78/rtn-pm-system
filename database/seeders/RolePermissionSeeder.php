@@ -54,6 +54,7 @@ class RolePermissionSeeder extends Seeder
 
         $purchasing = Role::findOrCreate('Purchasing', 'web');
         $purchasing->syncPermissions([
+            'view-all-project',
             'manage-purchasing',
             'view-purchasing',
             'view-harga',

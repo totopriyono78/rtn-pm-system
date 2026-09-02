@@ -56,7 +56,10 @@
                     </div>
                     <div>
                         <div class="text-xs text-slate-400">Actual Penggunaan</div>
-                        <div class="mt-0.5 text-base font-semibold text-slate-800">Rp {{ number_format($project->used_budget, 0, ',', '.') }}</div>
+                        <button type="button" wire:click="openBudgetDetail" class="group mt-0.5 flex items-center gap-1.5 text-base font-semibold text-slate-800 transition-colors hover:text-indigo-600" title="Lihat rincian Purchase Order">
+                            Rp {{ number_format($project->used_budget, 0, ',', '.') }}
+                            <x-icon name="eye" class="h-3.5 w-3.5 text-slate-300 transition-colors group-hover:text-indigo-500" />
+                        </button>
                     </div>
                     <div>
                         <div class="text-xs text-slate-400">Sisa Budget</div>
@@ -368,6 +371,64 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    @if ($showBudgetModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showBudgetModal', false)">
+            <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+                <div class="mb-1 flex items-center justify-between">
+                    <h3 class="flex items-center gap-2 text-lg font-semibold text-slate-800">
+                        <x-icon name="wallet" class="h-5 w-5 text-indigo-500" /> Rincian Actual Penggunaan Budget
+                    </h3>
+                    <button type="button" wire:click="$set('showBudgetModal', false)" class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+                        <x-icon name="x-mark" class="h-5 w-5" />
+                    </button>
+                </div>
+
+                @php $issuedPOs = $project->purchaseOrders->where('status', 'issued')->sortByDesc(fn ($po) => $po->approved_at ?? $po->created_at); @endphp
+
+                @if ($issuedPOs->isEmpty())
+                    <x-empty-state icon="wallet" title="Belum ada Purchase Order berstatus diterbitkan untuk proyek ini." />
+                @else
+                    <p class="mb-3 text-xs text-slate-400">Total Actual Penggunaan dihitung dari seluruh Purchase Order berstatus "Diterbitkan" berikut ini.</p>
+
+                    <div class="space-y-3">
+                        @foreach ($issuedPOs as $po)
+                            <div class="rounded-lg border border-slate-100">
+                                <div class="flex items-center justify-between gap-3 px-3 py-2.5">
+                                    <div>
+                                        <div class="text-sm font-medium text-slate-800">{{ $po->code }}</div>
+                                        <div class="text-xs text-slate-500">{{ $po->vendor->name }} &middot; {{ optional($po->approved_at ?? $po->created_at)->format('d M Y') }}</div>
+                                    </div>
+                                    <div class="flex shrink-0 items-center gap-3">
+                                        <div class="text-sm font-semibold text-slate-800">Rp {{ number_format($po->total, 0, ',', '.') }}</div>
+                                        <a href="{{ route('purchasing.po.print', $po) }}" target="_blank" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50">
+                                            <x-icon name="printer" class="h-3.5 w-3.5" /> Cetak
+                                        </a>
+                                    </div>
+                                </div>
+                                <table class="w-full border-t border-slate-100 text-left text-xs">
+                                    <tbody>
+                                        @foreach ($po->items as $line)
+                                            <tr class="border-t border-slate-50">
+                                                <td class="py-1.5 pl-3 text-slate-600">{{ $line->item->name }}</td>
+                                                <td class="py-1.5 text-slate-400">{{ rtrim(rtrim(number_format($line->qty, 2), '0'), '.') }} {{ $line->item->unit_of_measure }}</td>
+                                                <td class="py-1.5 pr-3 text-right text-slate-600">Rp {{ number_format($line->subtotal, 0, ',', '.') }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-4 flex items-center justify-between border-t border-slate-200 pt-3">
+                        <span class="text-sm font-medium text-slate-600">Total Actual Penggunaan ({{ $issuedPOs->count() }} PO)</span>
+                        <span class="text-base font-semibold text-slate-800">Rp {{ number_format($project->used_budget, 0, ',', '.') }}</span>
+                    </div>
+                @endif
             </div>
         </div>
     @endif

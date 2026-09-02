@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Activity;
 use App\Models\Assignment;
+use App\Models\MaterialTracking;
 use App\Models\Project;
 use App\Models\RequestForQuotation;
 use App\Models\WorkLog;
@@ -28,6 +29,19 @@ class Dashboard extends Component
 
     public const SEQUENTIAL_HUE = '#2a78d6';
 
+    /**
+     * Status di MaterialTracking yang dianggap "belum diterima".
+     */
+    public const NOT_RECEIVED_STATUSES = ['ordered', 'shipping'];
+
+    public bool $showPendingMaterialModal = false;
+
+    public function openPendingMaterial(): void
+    {
+        abort_unless(auth()->user()->hasPermissionTo('view-purchasing'), 403);
+        $this->showPendingMaterialModal = true;
+    }
+
     public function render()
     {
         $user = Auth::user();
@@ -47,6 +61,16 @@ class Dashboard extends Component
         $pendingApprovals = null;
         if ($user->hasPermissionTo('approve-purchasing')) {
             $pendingApprovals = RequestForQuotation::where('status', 'submitted')->with('project')->latest()->take(5)->get();
+        }
+
+        // ===== Material yang sudah dipesan tapi belum diterima (belum "arrived"/"installed") =====
+        $pendingMaterials = null;
+        if ($user->hasPermissionTo('view-purchasing')) {
+            $pendingMaterials = MaterialTracking::whereIn('project_id', $visibleProjectIds)
+                ->whereIn('status', self::NOT_RECEIVED_STATUSES)
+                ->with(['item', 'project', 'purchaseOrderItem.purchaseOrder'])
+                ->oldest()
+                ->get();
         }
 
         // ===== Distribusi status proyek (bar chart kategorikal) =====
@@ -105,6 +129,7 @@ class Dashboard extends Component
             'projects' => $projects,
             'todaysAssignments' => $todaysAssignments,
             'pendingApprovals' => $pendingApprovals,
+            'pendingMaterials' => $pendingMaterials,
             'totalProjects' => $visibleProjectIds->count(),
             'ongoingActivities' => Activity::whereIn('project_id', $visibleProjectIds)
                 ->where('status', 'sedang_dikerjakan')->count(),

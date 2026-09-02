@@ -72,6 +72,34 @@
                 </div>
             </a>
         @endif
+
+        @if ($pendingMaterials !== null)
+            @php $hasPendingMaterial = $pendingMaterials->count() > 0; @endphp
+            <button
+                type="button"
+                wire:click="openPendingMaterial"
+                @class([
+                    'relative flex items-start gap-4 rounded-2xl border p-5 text-left shadow-sm transition-colors',
+                    'border-amber-200 bg-amber-50 hover:bg-amber-100' => $hasPendingMaterial,
+                    'border-slate-100 bg-white hover:bg-slate-50' => ! $hasPendingMaterial,
+                ])
+            >
+                <div @class([
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                    'bg-amber-100 text-amber-600' => $hasPendingMaterial,
+                    'bg-violet-50 text-violet-600' => ! $hasPendingMaterial,
+                ])>
+                    <x-icon name="package" class="h-5 w-5" />
+                </div>
+                <div class="min-w-0">
+                    <div @class(['text-xs font-medium uppercase tracking-wide', 'text-amber-700' => $hasPendingMaterial, 'text-slate-400' => ! $hasPendingMaterial])>Material Belum Diterima</div>
+                    <div @class(['mt-1 text-2xl font-semibold', 'text-amber-800' => $hasPendingMaterial, 'text-slate-800' => ! $hasPendingMaterial])>{{ $pendingMaterials->count() }}</div>
+                    @if ($hasPendingMaterial)
+                        <div class="mt-0.5 text-xs font-medium text-amber-700">Klik untuk lihat daftar &rarr;</div>
+                    @endif
+                </div>
+            </button>
+        @endif
     </div>
 
     {{-- ===== Panel aksi cepat ===== --}}
@@ -256,4 +284,67 @@
             </table>
         </div>
     </div>
+
+    @if ($showPendingMaterialModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showPendingMaterialModal', false)">
+            <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+                <div class="mb-1 flex items-center justify-between">
+                    <h3 class="flex items-center gap-2 text-lg font-semibold text-slate-800">
+                        <x-icon name="package" class="h-5 w-5 text-amber-500" /> Material Belum Diterima
+                    </h3>
+                    <button type="button" wire:click="$set('showPendingMaterialModal', false)" class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+                        <x-icon name="x-mark" class="h-5 w-5" />
+                    </button>
+                </div>
+
+                @if ($pendingMaterials->isEmpty())
+                    <x-empty-state icon="package" title="Semua material sudah diterima. Tidak ada yang tertunda." />
+                @else
+                    <p class="mb-3 text-xs text-slate-400">Material yang sudah dipesan (status "Ordered"/"Shipping") namun belum berstatus diterima, diurutkan dari yang paling lama dipesan.</p>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-xs uppercase text-slate-400">
+                                <tr>
+                                    <th class="pb-2">Item</th>
+                                    <th class="pb-2">Proyek</th>
+                                    <th class="pb-2">No. PO</th>
+                                    <th class="pb-2">Tanggal Pesan</th>
+                                    <th class="pb-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($pendingMaterials as $m)
+                                    @php $po = $m->purchaseOrderItem?->purchaseOrder; @endphp
+                                    <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
+                                        <td class="py-2 font-medium">{{ $m->item->name }}</td>
+                                        <td class="py-2">
+                                            <a href="{{ route('projects.show', $m->project) }}" class="text-indigo-600 hover:underline">{{ $m->project->name }}</a>
+                                        </td>
+                                        <td class="py-2 text-slate-500">
+                                            @if ($po)
+                                                <a href="{{ route('purchasing.po.print', $po) }}" target="_blank" class="text-indigo-600 hover:underline">{{ $po->code }}</a>
+                                            @else
+                                                <span class="text-slate-300">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-2 text-slate-500">{{ $po?->created_at?->format('d M Y') ?? '-' }}</td>
+                                        <td class="py-2">
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                                                <x-icon name="clock" class="h-3 w-3" /> {{ \App\Models\MaterialTracking::STATUSES[$m->status] }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 flex justify-end border-t border-slate-200 pt-3">
+                        <a href="{{ route('purchasing.tracking') }}" class="text-sm font-medium text-indigo-600 hover:underline">Buka Material Tracking &rarr;</a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
 </div>

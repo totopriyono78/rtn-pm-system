@@ -13,15 +13,30 @@ class MaterialTracking extends Component
 {
     public string $projectFilter = '';
 
+    /**
+     * Dikelompokkan per proyek agar bagian Purchasing bisa langsung melihat
+     * seluruh barang yang dipesan untuk masing-masing proyek: item, qty,
+     * nomor PO terkait, tanggal pesan, dan status penerimaannya.
+     */
     public function render()
     {
-        $trackings = MaterialTrackingModel::with('item', 'project', 'updatedBy')
+        $trackings = MaterialTrackingModel::with(['item', 'project', 'updatedBy', 'purchaseOrderItem.purchaseOrder'])
             ->when($this->projectFilter, fn ($q) => $q->where('project_id', $this->projectFilter))
             ->latest()
             ->get();
 
+        $trackingsByProject = $trackings
+            ->groupBy('project_id')
+            ->map(fn ($items) => [
+                'project' => $items->first()->project,
+                'items' => $items,
+                'receivedCount' => $items->whereIn('status', ['arrived', 'installed'])->count(),
+            ])
+            ->sortBy(fn ($group) => $group['project']->name)
+            ->values();
+
         return view('livewire.purchasing.material-tracking', [
-            'trackings' => $trackings,
+            'trackingsByProject' => $trackingsByProject,
             'projects' => Project::orderBy('name')->get(),
             'canManage' => auth()->user()->hasPermissionTo('manage-material-tracking'),
         ]);

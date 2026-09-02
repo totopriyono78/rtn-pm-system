@@ -32,6 +32,8 @@ class ProjectDetail extends Component
 
     public string $activityEndDate = '';
 
+    public bool $showBudgetModal = false;
+
     public bool $showAssignModal = false;
 
     public ?int $assigningActivityId = null;
@@ -222,6 +224,12 @@ class ProjectDetail extends Component
         abort_unless(auth()->user()->hasPermissionTo('manage-projects'), 403);
         Activity::findOrFail($id)->delete();
         session()->flash('success', 'Activity dihapus.');
+    }
+
+    public function openBudgetDetail(): void
+    {
+        abort_unless(auth()->user()->hasPermissionTo('view-harga'), 403);
+        $this->showBudgetModal = true;
     }
 
     public function openAssignTeknisi(int $activityId): void
