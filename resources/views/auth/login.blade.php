@@ -5,13 +5,13 @@
 @section('content')
     <div x-data="{ showPassword: false }">
 
-        <div class="mb-8">
+        <div class="mb-5">
             <h1 class="text-2xl font-bold text-slate-800">Selamat Datang Kembali</h1>
-            <p class="mt-2 text-sm text-slate-500">Masuk untuk mengakses sistem manajemen proyek PT RTN.</p>
+            <p class="mt-1.5 text-sm text-slate-500">Masuk untuk mengakses sistem manajemen proyek PT RTN.</p>
         </div>
 
         @if ($errors->any())
-            <div class="mb-6 flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div class="mb-4 flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
                 <x-icon name="alert-circle" class="mt-0.5 h-4 w-4 shrink-0" />
                 <div>
                     @foreach ($errors->all() as $error)
@@ -21,7 +21,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}" class="space-y-5">
+        <form method="POST" action="{{ route('login') }}" class="space-y-4">
             @csrf
 
             <div>
@@ -63,50 +63,40 @@
             </div>
 
             <button type="submit"
-                class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-2">
+                class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-2">
                 Masuk
                 <x-icon name="chevron-left" class="h-4 w-4 rotate-180" />
             </button>
         </form>
 
-        <div class="mt-8 flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs leading-relaxed text-slate-500">
+        <div class="mt-4 flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-xs leading-relaxed text-slate-500">
             <x-icon name="shield" class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
             <span>Akun hanya dibuat oleh Administrator. Hubungi Admin jika Anda belum memiliki akses.</span>
         </div>
 
         @if (config('demo.show_accounts'))
-            <div class="mt-4 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
-                <div class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
-                    <x-icon name="users" class="h-3.5 w-3.5" />
-                    Akun Demo
+            <div class="mt-3 rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                <div class="mb-1.5 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                        <x-icon name="users" class="h-3.5 w-3.5" />
+                        Akun Demo
+                    </div>
+                    <span class="text-[11px] text-amber-700/60">password: <code class="font-mono">{{ config('demo.password') }}</code></span>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="text-amber-700/60">
-                                <th class="pb-1.5 pr-2 font-medium">Role</th>
-                                <th class="pb-1.5 pr-2 font-medium">Email</th>
-                                <th class="pb-1.5 font-medium">Password</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (config('demo.accounts') as $account)
-                                <tr class="cursor-pointer border-t border-amber-100 transition-colors hover:bg-amber-100/50"
-                                    title="Klik untuk isi form otomatis"
-                                    onclick="document.getElementById('email').value='{{ $account['email'] }}'; document.getElementById('password').value='{{ config('demo.password') }}';">
-                                    <td class="py-1.5 pr-2 text-slate-600">{{ $account['role'] }}</td>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-700">{{ $account['email'] }}</td>
-                                    <td class="py-1.5 font-mono text-slate-500">{{ config('demo.password') }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="max-h-24 space-y-0.5 overflow-y-auto">
+                    @foreach (config('demo.accounts') as $account)
+                        <button type="button"
+                            title="Klik untuk isi form otomatis"
+                            class="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1 text-left text-xs transition-colors hover:bg-amber-100/60"
+                            onclick="document.getElementById('email').value='{{ $account['email'] }}'; document.getElementById('password').value='{{ config('demo.password') }}';">
+                            <span class="font-medium text-slate-700">{{ $account['role'] }}</span>
+                            <span class="truncate text-slate-500">{{ $account['email'] }}</span>
+                        </button>
+                    @endforeach
                 </div>
 
-                <p class="mt-2.5 text-[11px] leading-relaxed text-amber-700/70">
-                    Klik salah satu baris untuk mengisi form secara otomatis.
-                </p>
+                <p class="mt-1.5 text-[11px] text-amber-700/70">Klik salah satu baris untuk mengisi form secara otomatis.</p>
             </div>
         @endif
     </div>
