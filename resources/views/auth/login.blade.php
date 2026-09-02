@@ -5,9 +5,8 @@
 @section('content')
     <div x-data="{ showPassword: false }">
 
-        <div class="mb-5">
+        <div class="mb-6">
             <h1 class="text-2xl font-bold text-slate-800">Selamat Datang Kembali</h1>
-            <p class="mt-1.5 text-sm text-slate-500">Masuk untuk mengakses sistem manajemen proyek PT RTN.</p>
         </div>
 
         @if ($errors->any())
@@ -25,7 +24,7 @@
             @csrf
 
             <div>
-                <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+                <label for="email" class="mb-1 block text-sm font-medium text-slate-700">Email</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                         <x-icon name="mail" class="h-[18px] w-[18px]" />
@@ -37,7 +36,7 @@
             </div>
 
             <div>
-                <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+                <label for="password" class="mb-1 block text-sm font-medium text-slate-700">Password</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                         <x-icon name="lock" class="h-[18px] w-[18px]" />
@@ -69,13 +68,8 @@
             </button>
         </form>
 
-        <div class="mt-4 flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-xs leading-relaxed text-slate-500">
-            <x-icon name="shield" class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-            <span>Akun hanya dibuat oleh Administrator. Hubungi Admin jika Anda belum memiliki akses.</span>
-        </div>
-
         @if (config('demo.show_accounts'))
-            <div class="mt-3 rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+            <div class="mt-5 rounded-xl border border-amber-100 bg-amber-50/60 p-2.5">
                 <div class="mb-1.5 flex items-center justify-between gap-2">
                     <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-700">
                         <x-icon name="users" class="h-3.5 w-3.5" />
@@ -84,14 +78,15 @@
                     <span class="text-[11px] text-amber-700/60">password: <code class="font-mono">{{ config('demo.password') }}</code></span>
                 </div>
 
-                <div class="max-h-24 space-y-0.5 overflow-y-auto">
+                {{-- grid 2 kolom supaya semua akun tampil sekaligus tanpa perlu scroll --}}
+                <div class="grid grid-cols-2 gap-1">
                     @foreach (config('demo.accounts') as $account)
                         <button type="button"
                             title="Klik untuk isi form otomatis"
-                            class="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1 text-left text-xs transition-colors hover:bg-amber-100/60"
+                            class="rounded-lg px-2 py-1 text-left transition-colors hover:bg-amber-100/60"
                             onclick="document.getElementById('email').value='{{ $account['email'] }}'; document.getElementById('password').value='{{ config('demo.password') }}';">
-                            <span class="font-medium text-slate-700">{{ $account['role'] }}</span>
-                            <span class="truncate text-slate-500">{{ $account['email'] }}</span>
+                            <div class="text-[11px] font-medium leading-tight text-slate-700">{{ $account['role'] }}</div>
+                            <div class="truncate text-[10px] leading-tight text-slate-500">{{ $account['email'] }}</div>
                         </button>
                     @endforeach
                 </div>
