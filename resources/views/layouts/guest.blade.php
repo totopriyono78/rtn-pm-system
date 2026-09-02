@@ -53,7 +53,12 @@
                 {{-- tint brand tipis + gradasi halus agar foto menyatu dengan panel gelap --}}
                 <div class="pointer-events-none absolute inset-0 bg-indigo-950/20 mix-blend-multiply"></div>
                 <div class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-slate-950/70 to-transparent"></div>
-                <div class="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/50 to-transparent"></div>
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/70 to-transparent"></div>
+
+                {{-- footer copyright, overlay di bagian bawah foto (memakai gradasi gelap di bawah agar teks tetap terbaca) --}}
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 px-12 py-3 text-[11px] text-indigo-100/80 xl:px-16">
+                    &copy; {{ now()->year }} PT. Gamatechno Indonesia. All rights reserved.
+                </div>
             </div>
         </div>
 
