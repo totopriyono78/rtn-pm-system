@@ -32,6 +32,7 @@
             <table class="w-full text-left text-sm">
                 <thead class="text-xs uppercase text-slate-400">
                     <tr>
+                        <th class="pb-2">#</th>
                         <th class="pb-2">Proyek</th>
                         <th class="pb-2">Lokasi</th>
                         <th class="pb-2">PIC</th>
@@ -43,6 +44,7 @@
                 <tbody>
                     @forelse ($projects as $p)
                         <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
+                            <td class="py-2 text-slate-400">{{ ($projects->currentPage() - 1) * $projects->perPage() + $loop->iteration }}</td>
                             <td class="py-2 font-medium"><a href="{{ route('projects.show', $p) }}" class="text-indigo-600 hover:underline">{{ $p->name }}</a></td>
                             <td class="py-2 text-slate-500">{{ $p->unit->name }} &middot; {{ $p->unit->region->code }}</td>
                             <td class="py-2 text-slate-500">{{ $p->pic->name ?? '-' }}</td>
@@ -64,7 +66,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6"><x-empty-state icon="briefcase" title="Belum ada proyek." /></td></tr>
+                        <tr><td colspan="7"><x-empty-state icon="briefcase" title="Belum ada proyek." /></td></tr>
                     @endforelse
                 </tbody>
             </table>

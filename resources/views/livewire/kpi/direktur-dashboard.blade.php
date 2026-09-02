@@ -135,6 +135,7 @@
             <table class="w-full text-left text-sm">
                 <thead class="text-xs uppercase text-slate-400">
                     <tr>
+                        <th class="pb-2">#</th>
                         <th class="pb-2">Proyek</th>
                         <th class="pb-2">Jam Rencana</th>
                         <th class="pb-2">Jam Aktual</th>
@@ -145,6 +146,7 @@
                     @forelse ($projects as $row)
                         @php $selisih = $row['actual'] - $row['planned']; @endphp
                         <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
+                            <td class="py-2 text-slate-400">{{ $loop->iteration }}</td>
                             <td class="py-2 font-medium">
                                 <a href="{{ route('projects.show', $row['project']) }}" class="text-indigo-600 hover:underline">{{ $row['project']->name }}</a>
                             </td>
@@ -155,7 +157,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4"><x-empty-state icon="briefcase" title="Belum ada proyek." /></td></tr>
+                        <tr><td colspan="5"><x-empty-state icon="briefcase" title="Belum ada proyek." /></td></tr>
                     @endforelse
                 </tbody>
             </table>
