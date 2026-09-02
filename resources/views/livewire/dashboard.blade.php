@@ -229,7 +229,7 @@
                 </thead>
                 <tbody>
                     @forelse ($projects as $p)
-                        <tr class="border-t border-slate-100">
+                        <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
                             <td class="py-2.5"><a href="{{ route('projects.show', $p) }}" class="font-medium text-indigo-600 hover:underline">{{ $p->name }}</a></td>
                             <td class="py-2.5 text-slate-500">{{ $p->unit->name }} &middot; {{ $p->unit->region->name }}</td>
                             <td class="py-2.5">
@@ -248,7 +248,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="py-4 text-center text-slate-400">Belum ada proyek.</td></tr>
+                        <tr><td colspan="4"><x-empty-state icon="briefcase" title="Belum ada proyek." /></td></tr>
                     @endforelse
                 </tbody>
             </table>

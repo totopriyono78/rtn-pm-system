@@ -1,8 +1,5 @@
 <div class="max-w-2xl space-y-6">
-    <div>
-        <h2 class="text-xl font-semibold text-slate-800">Submit Laporan</h2>
-        <p class="text-sm text-slate-500">Pilih penugasan, isi jam kerja, dan upload berkas pendukung (maks {{ $maxUploadMb }} MB per berkas).</p>
-    </div>
+    <x-page-header icon="doc-plus" color="emerald" title="Submit Laporan" subtitle="Pilih penugasan, isi jam kerja, dan upload berkas pendukung (maks {{ $maxUploadMb }} MB per berkas)." />
 
     <form wire:submit="save" class="space-y-5 rounded-xl bg-white p-6 shadow-sm">
         <div>
@@ -56,29 +53,35 @@
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">Dokumen Laporan (PDF/DOCX/Video)</label>
+            <label class="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                <x-icon name="doc-text" class="h-4 w-4 text-slate-400" /> Dokumen Laporan (PDF/DOCX/Video)
+            </label>
             <input type="file" wire:model="documents" multiple class="block w-full text-sm">
             <div wire:loading wire:target="documents" class="text-xs text-slate-400">Mengunggah...</div>
             @error('documents.*') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">Foto Dokumentasi Lapangan</label>
+            <label class="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                <x-icon name="package" class="h-4 w-4 text-slate-400" /> Foto Dokumentasi Lapangan
+            </label>
             <input type="file" wire:model="photos" multiple accept="image/*" class="block w-full text-sm">
             <div wire:loading wire:target="photos" class="text-xs text-slate-400">Mengunggah...</div>
             @error('photos.*') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">Drawing / As-built (opsional)</label>
+            <label class="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                <x-icon name="cube" class="h-4 w-4 text-slate-400" /> Drawing / As-built (opsional)
+            </label>
             <input type="file" wire:model="drawings" multiple class="block w-full text-sm">
             <div wire:loading wire:target="drawings" class="text-xs text-slate-400">Mengunggah...</div>
             @error('drawings.*') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
         </div>
 
         <button type="submit" wire:loading.attr="disabled" wire:target="save"
-            class="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50">
-            Kirim Laporan
+            class="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-50">
+            <x-icon name="check" class="h-4 w-4" /> Kirim Laporan
         </button>
     </form>
 </div>

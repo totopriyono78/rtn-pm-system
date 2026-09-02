@@ -1,60 +1,74 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-xl font-semibold text-slate-800">Proyek</h2>
-            <p class="text-sm text-slate-500">Daftar proyek sesuai akses region Anda.</p>
-        </div>
+        <x-page-header icon="briefcase" color="indigo" title="Proyek" subtitle="Daftar proyek sesuai akses region Anda." />
         @if ($canManage)
-            <button wire:click="openCreate" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">+ Tambah Proyek</button>
+            <button wire:click="openCreate" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500">
+                <x-icon name="plus" class="h-4 w-4" /> Tambah Proyek
+            </button>
         @endif
     </div>
 
     <div class="rounded-xl bg-white p-5 shadow-sm">
-        <div class="mb-4 flex flex-wrap gap-3">
-            <input wire:model.live.debounce.400ms="search" type="text" placeholder="Cari nama proyek..."
-                class="w-full max-w-sm rounded-lg border border-slate-300 px-3 py-2 text-sm">
-            <select wire:model.live="statusFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                <option value="">Semua Status</option>
-                @foreach (\App\Models\Project::STATUSES as $key => $label)
-                    <option value="{{ $key }}">{{ $label }}</option>
-                @endforeach
-            </select>
+        <div class="mb-4 flex flex-wrap items-center gap-3">
+            <div class="relative w-full max-w-sm">
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <x-icon name="search" class="h-4 w-4" />
+                </span>
+                <input wire:model.live.debounce.400ms="search" type="text" placeholder="Cari nama proyek..."
+                    class="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm">
+            </div>
+            <div class="flex items-center gap-2">
+                <x-icon name="filter" class="h-4 w-4 text-slate-400" />
+                <select wire:model.live="statusFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    <option value="">Semua Status</option>
+                    @foreach (\App\Models\Project::STATUSES as $key => $label)
+                        <option value="{{ $key }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
-        <table class="w-full text-left text-sm">
-            <thead class="text-xs uppercase text-slate-400">
-                <tr>
-                    <th class="pb-2">Proyek</th>
-                    <th class="pb-2">Lokasi</th>
-                    <th class="pb-2">PIC</th>
-                    <th class="pb-2">Status</th>
-                    <th class="pb-2">Progress</th>
-                    <th class="pb-2 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($projects as $p)
-                    <tr class="border-t border-slate-100">
-                        <td class="py-2 font-medium"><a href="{{ route('projects.show', $p) }}" class="text-indigo-600 hover:underline">{{ $p->name }}</a></td>
-                        <td class="py-2 text-slate-500">{{ $p->unit->name }} &middot; {{ $p->unit->region->code }}</td>
-                        <td class="py-2 text-slate-500">{{ $p->pic->name ?? '-' }}</td>
-                        <td class="py-2"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\Project::STATUSES[$p->status] }}</span></td>
-                        <td class="py-2">
-                            <div class="h-2 w-28 overflow-hidden rounded-full bg-slate-100">
-                                <div class="h-2 rounded-full bg-indigo-500" style="width: {{ $p->progress_percent }}%"></div>
-                            </div>
-                        </td>
-                        <td class="py-2 text-right">
-                            @if ($canManage)
-                                <button wire:click="openEdit({{ $p->id }})" class="text-indigo-600 hover:underline">Edit</button>
-                            @endif
-                        </td>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="text-xs uppercase text-slate-400">
+                    <tr>
+                        <th class="pb-2">Proyek</th>
+                        <th class="pb-2">Lokasi</th>
+                        <th class="pb-2">PIC</th>
+                        <th class="pb-2">Status</th>
+                        <th class="pb-2">Progress</th>
+                        <th class="pb-2 text-right">Aksi</th>
                     </tr>
-                @empty
-                    <tr><td colspan="6" class="py-4 text-center text-slate-400">Belum ada proyek.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($projects as $p)
+                        <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
+                            <td class="py-2 font-medium"><a href="{{ route('projects.show', $p) }}" class="text-indigo-600 hover:underline">{{ $p->name }}</a></td>
+                            <td class="py-2 text-slate-500">{{ $p->unit->name }} &middot; {{ $p->unit->region->code }}</td>
+                            <td class="py-2 text-slate-500">{{ $p->pic->name ?? '-' }}</td>
+                            <td class="py-2"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\Project::STATUSES[$p->status] }}</span></td>
+                            <td class="py-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
+                                        <div class="h-2 rounded-full bg-indigo-500" style="width: {{ $p->progress_percent }}%"></div>
+                                    </div>
+                                    <span class="text-xs text-slate-500">{{ $p->progress_percent }}%</span>
+                                </div>
+                            </td>
+                            <td class="py-2 text-right">
+                                @if ($canManage)
+                                    <button wire:click="openEdit({{ $p->id }})" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50">
+                                        <x-icon name="edit" class="h-3.5 w-3.5" /> Edit
+                                    </button>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6"><x-empty-state icon="briefcase" title="Belum ada proyek." /></td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
         <div class="mt-4">{{ $projects->links() }}</div>
     </div>
@@ -62,7 +76,10 @@
     @if ($showModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showModal', false)">
             <div class="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-                <h3 class="mb-5 text-lg font-semibold text-slate-800">{{ $editingId ? 'Edit Proyek' : 'Tambah Proyek' }}</h3>
+                <h3 class="mb-5 flex items-center gap-2 text-lg font-semibold text-slate-800">
+                    <x-icon name="{{ $editingId ? 'edit' : 'plus-circle' }}" class="h-5 w-5 text-indigo-500" />
+                    {{ $editingId ? 'Edit Proyek' : 'Tambah Proyek' }}
+                </h3>
                 <form wire:submit="save" class="space-y-4">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Nama Proyek</label>
@@ -139,8 +156,12 @@
                             <ul class="mt-2 space-y-1">
                                 @foreach ($existingDocuments as $doc)
                                     <li class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
-                                        <a href="{{ route('projects.documents.show', $doc) }}" class="truncate text-indigo-600 hover:underline" target="_blank">{{ $doc->original_name }}</a>
-                                        <button type="button" wire:click="removeDocument({{ $doc->id }})" wire:confirm="Hapus dokumen ini?" class="ml-2 shrink-0 text-red-500 hover:underline">Hapus</button>
+                                        <a href="{{ route('projects.documents.show', $doc) }}" class="flex min-w-0 items-center gap-1.5 truncate text-indigo-600 hover:underline" target="_blank">
+                                            <x-icon name="doc-text" class="h-3.5 w-3.5 shrink-0" /> {{ $doc->original_name }}
+                                        </a>
+                                        <button type="button" wire:click="removeDocument({{ $doc->id }})" wire:confirm="Hapus dokumen ini?" class="ml-2 flex shrink-0 items-center gap-1 rounded-lg px-1.5 py-0.5 text-red-500 transition-colors hover:bg-red-50">
+                                            <x-icon name="trash" class="h-3.5 w-3.5" />
+                                        </button>
                                     </li>
                                 @endforeach
                             </ul>
@@ -148,8 +169,10 @@
                     </div>
 
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" wire:click="$set('showModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Batal</button>
-                        <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Simpan</button>
+                        <button type="button" wire:click="$set('showModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+                            <x-icon name="check" class="h-4 w-4" /> Simpan
+                        </button>
                     </div>
                 </form>
             </div>

@@ -1,9 +1,12 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <a href="{{ route('purchasing.rfq') }}" class="text-sm text-indigo-600 hover:underline">&larr; Kembali</a>
-            <h2 class="mt-1 text-xl font-semibold text-slate-800">{{ $rfq->code }}</h2>
-            <p class="text-sm text-slate-500">{{ $rfq->project->name }} &middot; Dibuat oleh {{ $rfq->creator->name ?? '-' }}</p>
+            <a href="{{ route('purchasing.rfq') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:underline">
+                <x-icon name="arrow-left" class="h-4 w-4" /> Kembali
+            </a>
+            <div class="mt-2">
+                <x-page-header icon="doc-text" color="violet" :title="$rfq->code" :subtitle="$rfq->project->name . ' · Dibuat oleh ' . ($rfq->creator->name ?? '-')" />
+            </div>
         </div>
         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium">{{ \App\Models\RequestForQuotation::STATUSES[$rfq->status] }}</span>
     </div>
@@ -13,50 +16,56 @@
         <div class="mb-3 flex items-center justify-between">
             <h3 class="text-sm font-semibold text-slate-700">Daftar Material / Jasa Dibutuhkan</h3>
             @if ($rfq->status === 'draft' && $canManage)
-                <button wire:click="openAddItemModal" class="text-sm text-indigo-600 hover:underline">+ Tambah Item</button>
+                <button wire:click="openAddItemModal" class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline">
+                    <x-icon name="plus" class="h-4 w-4" /> Tambah Item
+                </button>
             @endif
         </div>
-        <table class="w-full text-left text-sm">
-            <thead class="text-xs uppercase text-slate-400">
-                <tr>
-                    <th class="pb-2">Item</th>
-                    <th class="pb-2">Kategori</th>
-                    <th class="pb-2 text-right">Qty</th>
-                    <th class="pb-2">Satuan</th>
-                    <th class="pb-2">Pemenang</th>
-                    @if ($rfq->status === 'draft' && $canManage)
-                        <th class="pb-2 text-right">Aksi</th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($rfq->items as $line)
-                    <tr class="border-t border-slate-100">
-                        <td class="py-2">{{ $line->item->name }}</td>
-                        <td class="py-2 text-slate-500">{{ \App\Models\Item::CATEGORIES[$line->item->category] ?? $line->item->category }}</td>
-                        <td class="py-2 text-right">{{ rtrim(rtrim(number_format($line->qty, 2), '0'), '.') }}</td>
-                        <td class="py-2 text-slate-500">{{ $line->item->unit_of_measure }}</td>
-                        <td class="py-2">
-                            @if ($line->awardedVendorQuotationItem)
-                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
-                                    <x-icon name="check" class="h-3 w-3" />
-                                    {{ $line->awardedVendorQuotationItem->vendorQuotation->vendor->name }}
-                                </span>
-                            @else
-                                <span class="text-xs text-slate-400">Belum dipilih</span>
-                            @endif
-                        </td>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="text-xs uppercase text-slate-400">
+                    <tr>
+                        <th class="pb-2">Item</th>
+                        <th class="pb-2">Kategori</th>
+                        <th class="pb-2 text-right">Qty</th>
+                        <th class="pb-2">Satuan</th>
+                        <th class="pb-2">Pemenang</th>
                         @if ($rfq->status === 'draft' && $canManage)
-                            <td class="py-2 text-right">
-                                <button wire:click="removeMaterialLine({{ $line->id }})" wire:confirm="Hapus item ini dari RFQ?" class="text-xs text-red-600 hover:underline">Hapus</button>
-                            </td>
+                            <th class="pb-2 text-right">Aksi</th>
                         @endif
                     </tr>
-                @empty
-                    <tr><td colspan="6" class="py-4 text-center text-slate-400">Belum ada item.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($rfq->items as $line)
+                        <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
+                            <td class="py-2">{{ $line->item->name }}</td>
+                            <td class="py-2 text-slate-500">{{ \App\Models\Item::CATEGORIES[$line->item->category] ?? $line->item->category }}</td>
+                            <td class="py-2 text-right">{{ rtrim(rtrim(number_format($line->qty, 2), '0'), '.') }}</td>
+                            <td class="py-2 text-slate-500">{{ $line->item->unit_of_measure }}</td>
+                            <td class="py-2">
+                                @if ($line->awardedVendorQuotationItem)
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+                                        <x-icon name="check" class="h-3 w-3" />
+                                        {{ $line->awardedVendorQuotationItem->vendorQuotation->vendor->name }}
+                                    </span>
+                                @else
+                                    <span class="text-xs text-slate-400">Belum dipilih</span>
+                                @endif
+                            </td>
+                            @if ($rfq->status === 'draft' && $canManage)
+                                <td class="py-2 text-right">
+                                    <button wire:click="removeMaterialLine({{ $line->id }})" wire:confirm="Hapus item ini dari RFQ?" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50">
+                                        <x-icon name="trash" class="h-3.5 w-3.5" /> Hapus
+                                    </button>
+                                </td>
+                            @endif
+                        </tr>
+                    @empty
+                        <tr><td colspan="6"><x-empty-state icon="cube" title="Belum ada item." /></td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
     {{-- ===== Penawaran vendor & perbandingan harga ===== --}}
@@ -64,12 +73,14 @@
         <div class="mb-3 flex items-center justify-between">
             <h3 class="text-sm font-semibold text-slate-700">Penawaran Vendor &amp; Perbandingan Harga</h3>
             @if ($rfq->status === 'draft' && $canManage)
-                <button wire:click="openVendorModal" class="text-sm text-indigo-600 hover:underline">+ Tambah Penawaran Vendor</button>
+                <button wire:click="openVendorModal" class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline">
+                    <x-icon name="plus" class="h-4 w-4" /> Tambah Penawaran Vendor
+                </button>
             @endif
         </div>
 
         @if ($rfq->vendorQuotations->isEmpty())
-            <p class="py-4 text-center text-sm text-slate-400">Belum ada penawaran vendor yang diinput.</p>
+            <x-empty-state icon="store" title="Belum ada penawaran vendor yang diinput." />
         @else
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[640px] text-left text-sm">
@@ -93,7 +104,7 @@
                                 $offers = $line->vendorQuotationItems;
                                 $cheapest = $offers->isNotEmpty() ? (float) $offers->min('unit_price') : null;
                             @endphp
-                            <tr class="border-t border-slate-100 align-top">
+                            <tr class="border-t border-slate-100 align-top transition-colors hover:bg-slate-50/70">
                                 <td class="py-2 pr-3">{{ $line->item->name }}</td>
                                 <td class="py-2 pr-3 text-right">{{ rtrim(rtrim(number_format($line->qty, 2), '0'), '.') }}</td>
                                 @foreach ($rfq->vendorQuotations as $vq)
@@ -144,8 +155,8 @@
                 <span class="text-xs text-slate-500">{{ $awardedCount }} dari {{ $rfq->items->count() }} item sudah punya pemenang.</span>
                 <button wire:click="submitForApproval" wire:confirm="Ajukan RFQ ini untuk approval Direktur?"
                     @disabled(! $isFullyAwarded)
-                    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-300">
-                    Ajukan untuk Approval
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-300">
+                    <x-icon name="arrow-right" class="h-4 w-4" /> Ajukan untuk Approval
                 </button>
             </div>
         @endif
@@ -185,8 +196,12 @@
 
             @if ($canApprove)
                 <div class="mt-6 flex gap-2 border-t border-slate-100 pt-4">
-                    <button wire:click="approve" wire:confirm="Setujui RFQ ini? Purchase Order akan otomatis diterbitkan per vendor terpilih." class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">Approve</button>
-                    <button wire:click="$set('showRejectModal', true)" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">Reject</button>
+                    <button wire:click="approve" wire:confirm="Setujui RFQ ini? Purchase Order akan otomatis diterbitkan per vendor terpilih." class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500">
+                        <x-icon name="check" class="h-4 w-4" /> Approve
+                    </button>
+                    <button wire:click="$set('showRejectModal', true)" class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-500">
+                        <x-icon name="x-mark" class="h-4 w-4" /> Reject
+                    </button>
                 </div>
             @endif
         </div>
@@ -214,7 +229,7 @@
                 </thead>
                 <tbody>
                     @foreach ($rfq->purchaseOrders as $po)
-                        <tr class="border-t border-slate-100">
+                        <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
                             <td class="py-2 font-medium">{{ $po->code }}</td>
                             <td class="py-2">{{ $po->vendor->name }}</td>
                             @if ($canViewHarga)
@@ -222,7 +237,9 @@
                             @endif
                             <td class="py-2"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\PurchaseOrder::STATUSES[$po->status] }}</span></td>
                             <td class="py-2 text-right">
-                                <a href="{{ route('purchasing.po.print', $po) }}" target="_blank" class="text-indigo-600 hover:underline">Cetak</a>
+                                <a href="{{ route('purchasing.po.print', $po) }}" target="_blank" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50">
+                                    <x-icon name="printer" class="h-3.5 w-3.5" /> Cetak
+                                </a>
                             </td>
                         </tr>
                     @endforeach
@@ -245,7 +262,9 @@
     @if ($showAddItemModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showAddItemModal', false)">
             <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                <h3 class="mb-4 text-lg font-semibold text-slate-800">Tambah Item</h3>
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800">
+                    <x-icon name="plus-circle" class="h-5 w-5 text-indigo-500" /> Tambah Item
+                </h3>
                 <form wire:submit="addMaterialLine" class="space-y-4">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Item</label>
@@ -263,8 +282,10 @@
                         @error('newItemQty') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" wire:click="$set('showAddItemModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Batal</button>
-                        <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Tambah</button>
+                        <button type="button" wire:click="$set('showAddItemModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+                            <x-icon name="plus" class="h-4 w-4" /> Tambah
+                        </button>
                     </div>
                 </form>
             </div>
@@ -275,7 +296,9 @@
     @if ($showVendorModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showVendorModal', false)">
             <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-                <h3 class="mb-4 text-lg font-semibold text-slate-800">Tambah Penawaran Vendor</h3>
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800">
+                    <x-icon name="plus-circle" class="h-5 w-5 text-indigo-500" /> Tambah Penawaran Vendor
+                </h3>
                 <form wire:submit="saveVendorQuotation" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -321,8 +344,10 @@
                     </div>
 
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" wire:click="$set('showVendorModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Batal</button>
-                        <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Simpan Penawaran</button>
+                        <button type="button" wire:click="$set('showVendorModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+                            <x-icon name="check" class="h-4 w-4" /> Simpan Penawaran
+                        </button>
                     </div>
                 </form>
             </div>
@@ -333,11 +358,15 @@
     @if ($showRejectModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showRejectModal', false)">
             <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                <h3 class="mb-4 text-lg font-semibold text-slate-800">Tolak RFQ</h3>
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800">
+                    <x-icon name="x-circle" class="h-5 w-5 text-red-500" /> Tolak RFQ
+                </h3>
                 <textarea wire:model="rejectNote" rows="3" placeholder="Alasan penolakan (opsional)" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
                 <div class="mt-4 flex justify-end gap-2">
-                    <button wire:click="$set('showRejectModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Batal</button>
-                    <button wire:click="reject" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">Tolak</button>
+                    <button wire:click="$set('showRejectModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">Batal</button>
+                    <button wire:click="reject" class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
+                        <x-icon name="x-mark" class="h-4 w-4" /> Tolak
+                    </button>
                 </div>
             </div>
         </div>

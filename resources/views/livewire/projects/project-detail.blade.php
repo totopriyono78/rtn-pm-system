@@ -1,9 +1,12 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <a href="{{ route('projects.index') }}" class="text-sm text-indigo-600 hover:underline">&larr; Kembali ke daftar proyek</a>
-            <h2 class="mt-1 text-xl font-semibold text-slate-800">{{ $project->name }}</h2>
-            <p class="text-sm text-slate-500">{{ $project->unit->name }} &middot; {{ $project->unit->region->name }} &middot; PIC: {{ $project->pic->name ?? '-' }}</p>
+            <a href="{{ route('projects.index') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:underline">
+                <x-icon name="arrow-left" class="h-4 w-4" /> Kembali ke daftar proyek
+            </a>
+            <div class="mt-2">
+                <x-page-header icon="briefcase" color="indigo" :title="$project->name" :subtitle="$project->unit->name . ' · ' . $project->unit->region->name . ' · PIC: ' . ($project->pic->name ?? '-')" />
+            </div>
         </div>
         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium">{{ \App\Models\Project::STATUSES[$project->status] }}</span>
     </div>
@@ -31,7 +34,9 @@
     @if ($canViewHarga)
         <div class="rounded-xl bg-white p-4 shadow-sm">
             <div class="mb-3 flex items-center justify-between">
-                <div class="text-xs uppercase text-slate-400">Budget Proyek</div>
+                <div class="flex items-center gap-1.5 text-xs uppercase text-slate-400">
+                    <x-icon name="wallet" class="h-3.5 w-3.5" /> Budget Proyek
+                </div>
                 @if ($project->budget !== null && $project->budget_usage_percent !== null)
                     @php
                         $pct = $project->budget_usage_percent;
@@ -71,7 +76,9 @@
 
     @if ($project->documents->isNotEmpty())
         <div class="rounded-xl bg-white p-4 shadow-sm">
-            <div class="mb-2 text-xs uppercase text-slate-400">Dokumen Proyek</div>
+            <div class="mb-2 flex items-center gap-1.5 text-xs uppercase text-slate-400">
+                <x-icon name="doc-text" class="h-3.5 w-3.5" /> Dokumen Proyek
+            </div>
             <ul class="flex flex-wrap gap-2">
                 @foreach ($project->documents as $doc)
                     <li>
@@ -87,8 +94,13 @@
     @endif
 
     <div class="flex gap-2 border-b border-slate-200">
+        @php
+            $tabIcons = ['overview' => 'clipboard-list', 'gantt' => 'chart-bar', 'boq' => 'truck', 'reports' => 'doc-text'];
+        @endphp
         @foreach (['overview' => 'Timeline Activity', 'gantt' => 'Gantt Chart', 'boq' => 'BOQ', 'reports' => 'Laporan'] as $tab => $label)
-            <button wire:click="$set('activeTab', '{{ $tab }}')" class="border-b-2 px-4 py-2 text-sm {{ $activeTab === $tab ? 'border-indigo-600 font-semibold text-indigo-600' : 'border-transparent text-slate-500' }}">{{ $label }}</button>
+            <button wire:click="$set('activeTab', '{{ $tab }}')" class="flex items-center gap-1.5 border-b-2 px-4 py-2 text-sm transition-colors {{ $activeTab === $tab ? 'border-indigo-600 font-semibold text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700' }}">
+                <x-icon :name="$tabIcons[$tab]" class="h-4 w-4" /> {{ $label }}
+            </button>
         @endforeach
     </div>
 
@@ -96,7 +108,9 @@
         <div class="rounded-xl bg-white p-5 shadow-sm">
             <div class="mb-4 flex justify-end">
                 @if ($canManage)
-                    <button wire:click="openCreateActivity" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">+ Tambah Activity</button>
+                    <button wire:click="openCreateActivity" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500">
+                        <x-icon name="plus" class="h-4 w-4" /> Tambah Activity
+                    </button>
                 @endif
             </div>
 
@@ -121,9 +135,15 @@
                                             <option value="{{ $key }}" @selected($activity->status === $key)>{{ $label }}</option>
                                         @endforeach
                                     </select>
-                                    <button wire:click="openAssignTeknisi({{ $activity->id }})" class="text-xs text-emerald-600 hover:underline">+ Tugaskan Teknisi</button>
-                                    <button wire:click="openEditActivity({{ $activity->id }})" class="text-xs text-indigo-600 hover:underline">Edit</button>
-                                    <button wire:click="deleteActivity({{ $activity->id }})" wire:confirm="Hapus activity ini?" class="text-xs text-red-600 hover:underline">Hapus</button>
+                                    <button wire:click="openAssignTeknisi({{ $activity->id }})" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-50">
+                                        <x-icon name="user-plus" class="h-3.5 w-3.5" /> Tugaskan
+                                    </button>
+                                    <button wire:click="openEditActivity({{ $activity->id }})" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50">
+                                        <x-icon name="edit" class="h-3.5 w-3.5" /> Edit
+                                    </button>
+                                    <button wire:click="deleteActivity({{ $activity->id }})" wire:confirm="Hapus activity ini?" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50">
+                                        <x-icon name="trash" class="h-3.5 w-3.5" /> Hapus
+                                    </button>
                                 @else
                                     <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\Activity::STATUSES[$activity->status] }}</span>
                                 @endif
@@ -146,7 +166,9 @@
                                         {{ $assignment->user->name }}
                                         <span class="text-emerald-500">&middot; {{ $assignment->scheduled_date->format('d M') }}</span>
                                         @if ($canManage)
-                                            <button wire:click="removeAssignment({{ $assignment->id }})" wire:confirm="Batalkan penugasan ini?" class="ml-0.5 rounded-full px-1 text-emerald-400 hover:bg-emerald-100 hover:text-emerald-700" title="Batalkan penugasan">&times;</button>
+                                            <button wire:click="removeAssignment({{ $assignment->id }})" wire:confirm="Batalkan penugasan ini?" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-emerald-400 hover:bg-emerald-100 hover:text-emerald-700" title="Batalkan penugasan">
+                                                <x-icon name="x-mark" class="h-3 w-3" />
+                                            </button>
                                         @endif
                                     </span>
                                 @endforeach
@@ -154,7 +176,7 @@
                         @endif
                     </div>
                 @empty
-                    <p class="text-sm text-slate-400">Belum ada activity untuk proyek ini.</p>
+                    <x-empty-state icon="clipboard-list" title="Belum ada activity untuk proyek ini." />
                 @endforelse
             </div>
         </div>
@@ -221,7 +243,9 @@
                 <div class="rounded-xl bg-white p-5 shadow-sm">
                     <div class="mb-3 flex items-center justify-between">
                         <div class="font-medium text-slate-800">{{ $po->code }} &middot; {{ $po->vendor->name }}</div>
-                        <a href="{{ route('purchasing.po.print', $po) }}" target="_blank" class="text-sm text-indigo-600 hover:underline">Cetak PO</a>
+                        <a href="{{ route('purchasing.po.print', $po) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-indigo-600 transition-colors hover:bg-indigo-50">
+                            <x-icon name="printer" class="h-4 w-4" /> Cetak PO
+                        </a>
                     </div>
                     <table class="w-full text-left text-sm">
                         <thead class="text-xs uppercase text-slate-400">
@@ -249,7 +273,9 @@
                     </table>
                 </div>
             @empty
-                <div class="rounded-xl bg-white p-5 text-sm text-slate-400 shadow-sm">Belum ada BOQ (Purchase Order yang diterbitkan) untuk proyek ini.</div>
+                <div class="rounded-xl bg-white p-5 shadow-sm">
+                    <x-empty-state icon="truck" title="Belum ada BOQ (Purchase Order yang diterbitkan) untuk proyek ini." />
+                </div>
             @endforelse
         </div>
     @endif
@@ -270,7 +296,7 @@
                     </thead>
                     <tbody>
                         @forelse ($reports as $report)
-                            <tr class="border-t border-slate-100">
+                            <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
                                 <td class="py-2">{{ $report->report_date->format('d M Y') }}</td>
                                 <td class="py-2">{{ $report->activity->name }}</td>
                                 <td class="py-2">{{ $report->user->name }}</td>
@@ -278,14 +304,16 @@
                                 <td class="py-2">{{ $report->start_time }} - {{ $report->end_time }}</td>
                                 <td class="py-2 space-x-2">
                                     @forelse ($report->files as $file)
-                                        <a href="{{ route('reports.files.show', $file) }}" class="text-indigo-600 hover:underline">{{ \App\Models\ReportFile::CATEGORIES[$file->category] }}</a>
+                                        <a href="{{ route('reports.files.show', $file) }}" class="inline-flex items-center gap-1 text-indigo-600 hover:underline">
+                                            <x-icon name="download" class="h-3.5 w-3.5" /> {{ \App\Models\ReportFile::CATEGORIES[$file->category] }}
+                                        </a>
                                     @empty
                                         <span class="text-slate-300">-</span>
                                     @endforelse
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="py-4 text-center text-slate-400">Belum ada laporan.</td></tr>
+                            <tr><td colspan="6"><x-empty-state icon="doc-text" title="Belum ada laporan." /></td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -298,7 +326,10 @@
     @if ($showActivityModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showActivityModal', false)">
             <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                <h3 class="mb-4 text-lg font-semibold text-slate-800">{{ $editingActivityId ? 'Edit Activity' : 'Tambah Activity' }}</h3>
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800">
+                    <x-icon name="{{ $editingActivityId ? 'edit' : 'plus-circle' }}" class="h-5 w-5 text-indigo-500" />
+                    {{ $editingActivityId ? 'Edit Activity' : 'Tambah Activity' }}
+                </h3>
                 <form wire:submit="saveActivity" class="space-y-4">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Nama Activity</label>
@@ -331,8 +362,10 @@
                     </div>
                     <p class="text-xs text-slate-400">Tanggal mulai/selesai dipakai untuk menampilkan activity ini di tab Gantt Chart.</p>
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" wire:click="$set('showActivityModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Batal</button>
-                        <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Simpan</button>
+                        <button type="button" wire:click="$set('showActivityModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+                            <x-icon name="check" class="h-4 w-4" /> Simpan
+                        </button>
                     </div>
                 </form>
             </div>
@@ -342,7 +375,9 @@
     @if ($showAssignModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showAssignModal', false)">
             <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                <h3 class="mb-4 text-lg font-semibold text-slate-800">Tugaskan Teknisi</h3>
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800">
+                    <x-icon name="user-plus" class="h-5 w-5 text-emerald-500" /> Tugaskan Teknisi
+                </h3>
                 <form wire:submit="saveAssignment" class="space-y-4">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Teknisi</label>
@@ -368,8 +403,10 @@
                         @error('assignNotes') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" wire:click="$set('showAssignModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Batal</button>
-                        <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">Tugaskan</button>
+                        <button type="button" wire:click="$set('showAssignModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">
+                            <x-icon name="user-plus" class="h-4 w-4" /> Tugaskan
+                        </button>
                     </div>
                 </form>
             </div>

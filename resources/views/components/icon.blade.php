@@ -28,6 +28,22 @@ $icons = [
     'printer' => '<rect x="5" y="3.5" width="14" height="7" rx="1" /><rect x="6" y="14" width="12" height="7" rx="1" /><path d="M7 14v-3.5h10V14" /><line x1="9" y1="17" x2="15" y2="17" />',
     'store' => '<path d="M4 9.5 5.5 4h13L20 9.5" /><rect x="4" y="9.5" width="16" height="10.5" rx="1" /><rect x="10" y="14" width="4" height="6" />',
     'package' => '<rect x="4" y="8" width="16" height="12" rx="1" /><path d="M4 8l8-4 8 4" /><path d="M12 4v16" />',
+    'edit' => '<path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />',
+    'trash' => '<path d="M4 7h16" /><path d="M9 7V4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V7" /><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /><path d="M10 11v6M14 11v6" />',
+    'plus' => '<path d="M12 5v14M5 12h14" />',
+    'plus-circle' => '<circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" />',
+    'user-plus' => '<circle cx="9" cy="8" r="3.2" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" /><path d="M18 8v5M15.5 10.5h5" />',
+    'x-mark' => '<path d="M6 6l12 12M18 6 6 18" />',
+    'x-circle' => '<circle cx="12" cy="12" r="9" /><path d="M9.5 9.5l5 5M14.5 9.5l-5 5" />',
+    'search' => '<circle cx="10.5" cy="10.5" r="6.5" /><path d="M20 20l-4.8-4.8" />',
+    'filter' => '<path d="M4 5h16M7 12h10M10.5 19h3" />',
+    'refresh' => '<path d="M4 10a8 8 0 0 1 14.5-4.5M20 14a8 8 0 0 1-14.5 4.5" /><path d="M18.5 3.5v4.5H14M5.5 20.5V16H10" />',
+    'arrow-left' => '<path d="M19 12H5" /><path d="M11 6l-6 6 6 6" />',
+    'arrow-right' => '<path d="M5 12h14" /><path d="M13 6l6 6-6 6" />',
+    'download' => '<path d="M12 3.5v11" /><path d="M8 10.5 12 14.5l4-4" /><path d="M4.5 17v2.5a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V17" />',
+    'wallet' => '<rect x="3" y="6.5" width="18" height="13" rx="2" /><path d="M3 10.5h18" /><circle cx="16.5" cy="14.5" r="1.2" />',
+    'clock' => '<circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" />',
+    'inbox' => '<path d="M4 12.5h4.5l1.5 3h4l1.5-3H20" /><path d="M5.5 5.5h13l1.5 7v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6Z" />',
 ];
 @endphp
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" {{ $attributes->merge(['class' => 'h-5 w-5']) }}>
