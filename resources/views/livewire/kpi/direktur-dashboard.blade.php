@@ -1,6 +1,33 @@
 <div class="space-y-6">
     <x-page-header icon="chart-bar" color="orange" title="Dashboard KPI" subtitle="Jam kerja karyawan berdasarkan laporan yang masuk." />
 
+    {{-- Ringkasan tim: memberi konteks langsung tanpa harus baca tabel dulu --}}
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-xl bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                <x-icon name="clock" class="h-3.5 w-3.5" /> Total Jam Tim Hari Ini
+            </div>
+            <div class="mt-2 text-2xl font-bold text-slate-800">{{ number_format($totalJamHariIni, 1) }} <span class="text-sm font-normal text-slate-400">jam</span></div>
+        </div>
+        <div class="rounded-xl bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                <x-icon name="users" class="h-3.5 w-3.5" /> Sudah Lapor Hari Ini
+            </div>
+            <div class="mt-2 text-2xl font-bold text-slate-800">{{ $sudahLaporHariIni }} <span class="text-sm font-normal text-slate-400">/ {{ $totalTeknisi }} teknisi</span></div>
+            @if ($totalTeknisi > 0 && $sudahLaporHariIni < $totalTeknisi)
+                <p class="mt-1 flex items-center gap-1 text-xs text-amber-600">
+                    <x-icon name="alert-circle" class="h-3.5 w-3.5" /> {{ $totalTeknisi - $sudahLaporHariIni }} teknisi belum lapor
+                </p>
+            @endif
+        </div>
+        <div class="rounded-xl bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                <x-icon name="chart-bar" class="h-3.5 w-3.5" /> Rata-rata Jam / Teknisi (Bulan Ini)
+            </div>
+            <div class="mt-2 text-2xl font-bold text-slate-800">{{ number_format($teamAvgMonth, 1) }} <span class="text-sm font-normal text-slate-400">jam</span></div>
+        </div>
+    </div>
+
     <div class="rounded-xl bg-white p-5 shadow-sm">
         <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
             <x-icon name="clock" class="h-4 w-4 text-slate-400" /> Jam Kerja Hari Ini (per karyawan)
@@ -21,13 +48,17 @@
     </div>
 
     <div class="rounded-xl bg-white p-5 shadow-sm">
-        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <x-icon name="users" class="h-4 w-4 text-slate-400" /> Akumulasi Jam Kerja per Individu
-        </h3>
+        <div class="mb-4 flex items-center justify-between">
+            <h3 class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <x-icon name="users" class="h-4 w-4 text-slate-400" /> Akumulasi Jam Kerja per Individu
+            </h3>
+            <span class="text-xs text-slate-400">Diurutkan dari jam kerja bulan ini tertinggi</span>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs uppercase text-slate-400">
                     <tr>
+                        <th class="pb-2">#</th>
                         <th class="pb-2">Karyawan</th>
                         <th class="pb-2">Hari Ini</th>
                         <th class="pb-2">Minggu Ini</th>
@@ -37,11 +68,24 @@
                 </thead>
                 <tbody>
                     @forelse ($accumulation as $row)
-                        <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
+                        @php $belowAvg = $row['month'] < $teamAvgMonth; @endphp
+                        <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70 {{ $belowAvg ? 'bg-amber-50/40' : '' }}">
+                            <td class="py-2 text-slate-400">
+                                @if ($loop->index === 0)
+                                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-700">1</span>
+                                @else
+                                    {{ $loop->index + 1 }}
+                                @endif
+                            </td>
                             <td class="py-2 font-medium">{{ $row['user']->name }}</td>
                             <td class="py-2">{{ $row['today'] }} jam</td>
                             <td class="py-2">{{ $row['week'] }} jam</td>
-                            <td class="py-2">{{ $row['month'] }} jam</td>
+                            <td class="py-2">
+                                {{ $row['month'] }} jam
+                                @if ($belowAvg)
+                                    <span class="ml-1 text-xs text-amber-600" title="Di bawah rata-rata tim ({{ $teamAvgMonth }} jam)">▼ di bawah rata-rata</span>
+                                @endif
+                            </td>
                             <td class="py-2 text-right">
                                 <a href="{{ route('kpi.drilldown', $row['user']) }}" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50">
                                     <x-icon name="chart-bar" class="h-3.5 w-3.5" /> Detail Breakdown
@@ -49,7 +93,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5"><x-empty-state icon="chart-bar" title="Belum ada data jam kerja bulan ini." /></td></tr>
+                        <tr><td colspan="6"><x-empty-state icon="chart-bar" title="Belum ada data jam kerja bulan ini." /></td></tr>
                     @endforelse
                 </tbody>
             </table>
