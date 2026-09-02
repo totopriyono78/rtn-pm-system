@@ -29,7 +29,7 @@
         <x-nav-link :href="route('purchasing.tracking')" :active="request()->routeIs('purchasing.tracking')" icon="package" label="Material Tracking" />
     @endcanany
 
-    @canany(['manage-users', 'manage-projects'])
+    @canany(['manage-users', 'manage-projects', 'manage-kpi-settings'])
         <div x-show="!collapsed" x-transition.opacity class="mt-5 px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Administrasi</div>
         <div x-show="collapsed" class="my-3 border-t border-slate-800"></div>
         @can('manage-users')
@@ -37,6 +37,9 @@
         @endcan
         @can('manage-projects')
             <x-nav-link :href="route('admin.locations')" :active="request()->routeIs('admin.locations')" icon="map-pin" label="Region & Unit" />
+        @endcan
+        @can('manage-kpi-settings')
+            <x-nav-link :href="route('admin.kpi-settings')" :active="request()->routeIs('admin.kpi-settings')" icon="sliders" label="Pengaturan KPI" />
         @endcan
     @endcanany
 </nav>

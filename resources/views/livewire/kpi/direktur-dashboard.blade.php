@@ -1,5 +1,12 @@
 <div class="space-y-6">
-    <x-page-header icon="chart-bar" color="orange" title="Dashboard KPI" subtitle="Jam kerja karyawan berdasarkan laporan yang masuk." />
+    <div class="flex items-start justify-between gap-3">
+        <x-page-header icon="chart-bar" color="orange" title="Dashboard KPI" subtitle="Jam kerja karyawan berdasarkan laporan yang masuk." />
+        @can('manage-kpi-settings')
+            <a href="{{ route('admin.kpi-settings') }}" class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50">
+                <x-icon name="sliders" class="h-3.5 w-3.5" /> Pengaturan KPI
+            </a>
+        @endcan
+    </div>
 
     {{-- Ringkasan tim: memberi konteks langsung tanpa harus baca tabel dulu --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -22,9 +29,16 @@
         </div>
         <div class="rounded-xl bg-white p-5 shadow-sm">
             <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-                <x-icon name="chart-bar" class="h-3.5 w-3.5" /> Rata-rata Jam / Teknisi (Bulan Ini)
+                <x-icon name="chart-bar" class="h-3.5 w-3.5" />
+                {{ $kpiSetting->isTargetMode() ? 'Target Jam / Bulan' : 'Rata-rata Jam / Teknisi (Bulan Ini)' }}
             </div>
-            <div class="mt-2 text-2xl font-bold text-slate-800">{{ number_format($teamAvgMonth, 1) }} <span class="text-sm font-normal text-slate-400">jam</span></div>
+            <div class="mt-2 text-2xl font-bold text-slate-800">
+                {{ number_format($kpiSetting->isTargetMode() ? $thresholdMonth : $teamAvgMonth, 1) }}
+                <span class="text-sm font-normal text-slate-400">jam</span>
+            </div>
+            <p class="mt-1 text-xs text-slate-400">
+                Mode: {{ $kpiSetting->isTargetMode() ? 'Target Tetap' : 'Rata-rata Tim' }}
+            </p>
         </div>
     </div>
 
@@ -48,11 +62,16 @@
     </div>
 
     <div class="rounded-xl bg-white p-5 shadow-sm">
-        <div class="mb-4 flex items-center justify-between">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 class="flex items-center gap-2 text-sm font-semibold text-slate-700">
                 <x-icon name="users" class="h-4 w-4 text-slate-400" /> Akumulasi Jam Kerja per Individu
             </h3>
-            <span class="text-xs text-slate-400">Diurutkan dari jam kerja bulan ini tertinggi</span>
+            <span class="text-xs text-slate-400">
+                Diurutkan dari jam kerja bulan ini tertinggi
+                @if ($kpiSetting->show_threshold_badges)
+                    &middot; Ambang: {{ number_format($thresholdDay, 1) }} jam/hari, {{ number_format($thresholdWeek, 1) }} jam/minggu, {{ number_format($thresholdMonth, 1) }} jam/bulan
+                @endif
+            </span>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
@@ -68,8 +87,12 @@
                 </thead>
                 <tbody>
                     @forelse ($accumulation as $row)
-                        @php $belowAvg = $row['month'] < $teamAvgMonth; @endphp
-                        <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70 {{ $belowAvg ? 'bg-amber-50/40' : '' }}">
+                        @php
+                            $belowDay = $kpiSetting->show_threshold_badges && $row['today'] < $thresholdDay;
+                            $belowWeek = $kpiSetting->show_threshold_badges && $row['week'] < $thresholdWeek;
+                            $belowMonth = $kpiSetting->show_threshold_badges && $row['month'] < $thresholdMonth;
+                        @endphp
+                        <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70 {{ $belowMonth ? 'bg-amber-50/40' : '' }}">
                             <td class="py-2 text-slate-400">
                                 @if ($loop->index === 0)
                                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-700">1</span>
@@ -78,12 +101,16 @@
                                 @endif
                             </td>
                             <td class="py-2 font-medium">{{ $row['user']->name }}</td>
-                            <td class="py-2">{{ $row['today'] }} jam</td>
-                            <td class="py-2">{{ $row['week'] }} jam</td>
+                            <td class="py-2 {{ $belowDay ? 'text-amber-600' : '' }}">
+                                {{ $row['today'] }} jam @if ($belowDay) <span title="Di bawah ambang harian ({{ number_format($thresholdDay, 1) }} jam)">▼</span> @endif
+                            </td>
+                            <td class="py-2 {{ $belowWeek ? 'text-amber-600' : '' }}">
+                                {{ $row['week'] }} jam @if ($belowWeek) <span title="Di bawah ambang mingguan ({{ number_format($thresholdWeek, 1) }} jam)">▼</span> @endif
+                            </td>
                             <td class="py-2">
                                 {{ $row['month'] }} jam
-                                @if ($belowAvg)
-                                    <span class="ml-1 text-xs text-amber-600" title="Di bawah rata-rata tim ({{ $teamAvgMonth }} jam)">▼ di bawah rata-rata</span>
+                                @if ($belowMonth)
+                                    <span class="ml-1 text-xs text-amber-600" title="Di bawah ambang bulanan ({{ number_format($thresholdMonth, 1) }} jam)">▼ kurang</span>
                                 @endif
                             </td>
                             <td class="py-2 text-right">

@@ -23,6 +23,7 @@ class RolePermissionSeeder extends Seeder
         'view-purchasing' => 'Melihat data pengadaan / status material',
         'view-harga' => 'Melihat harga di penawaran dan BOQ (VIEW_HARGA)',
         'manage-material-tracking' => 'Mengubah status tracking material',
+        'manage-kpi-settings' => 'Mengatur parameter perhitungan KPI (mode, target jam kerja, dsb) — khusus Administrator',
     ];
 
     public function run(): void

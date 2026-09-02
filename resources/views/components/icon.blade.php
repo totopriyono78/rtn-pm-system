@@ -44,6 +44,7 @@ $icons = [
     'wallet' => '<rect x="3" y="6.5" width="18" height="13" rx="2" /><path d="M3 10.5h18" /><circle cx="16.5" cy="14.5" r="1.2" />',
     'clock' => '<circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" />',
     'inbox' => '<path d="M4 12.5h4.5l1.5 3h4l1.5-3H20" /><path d="M5.5 5.5h13l1.5 7v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6Z" />',
+    'sliders' => '<line x1="4" y1="6" x2="20" y2="6" /><circle cx="9" cy="6" r="2" /><line x1="4" y1="12" x2="20" y2="12" /><circle cx="15" cy="12" r="2" /><line x1="4" y1="18" x2="20" y2="18" /><circle cx="7" cy="18" r="2" />',
 ];
 @endphp
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" {{ $attributes->merge(['class' => 'h-5 w-5']) }}>

@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\PurchaseOrderPrintController;
 use App\Http\Controllers\ReportFileController;
+use App\Livewire\Admin\KpiSettings;
 use App\Livewire\Admin\ManageLocations;
 use App\Livewire\Admin\ManageUsers;
 use App\Livewire\Dashboard;
@@ -64,6 +65,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('permission:view-kpi-team')->group(function () {
         Route::get('/kpi', DirekturDashboard::class)->name('kpi.dashboard');
         Route::get('/kpi/karyawan/{user}', EmployeeDrilldown::class)->name('kpi.drilldown');
+    });
+
+    Route::middleware('permission:manage-kpi-settings')->group(function () {
+        Route::get('/admin/kpi-settings', KpiSettings::class)->name('admin.kpi-settings');
     });
 
     // ===== Purchasing =====
