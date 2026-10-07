@@ -121,6 +121,7 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <livewire:notifications.notification-bell />
                     <span class="hidden rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 sm:inline-block">
                         {{ auth()->user()->roleLabel() }}
                     </span>

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['purchase_order_item_id', 'project_id', 'item_id', 'qty', 'status', 'updated_by'])]
+#[Fillable(['purchase_order_item_id', 'project_id', 'item_id', 'qty', 'status', 'updated_by', 'expected_arrival_date'])]
 class MaterialTracking extends Model
 {
     public const STATUSES = [
@@ -17,11 +17,39 @@ class MaterialTracking extends Model
         'installed' => 'Installed',
     ];
 
+    /**
+     * Status yang dianggap "sudah diterima" -- dipakai di accessor reminder
+     * H-7 di bawah supaya definisinya konsisten dengan widget Dashboard
+     * (NOT_RECEIVED_STATUSES) tanpa duplikasi daftar status.
+     */
+    public const RECEIVED_STATUSES = ['arrived', 'installed'];
+
     protected function casts(): array
     {
         return [
             'qty' => 'decimal:2',
+            'expected_arrival_date' => 'date',
         ];
+    }
+
+    /**
+     * Reminder H-7 (SRS 4.12) -- true kalau sudah lewat tanggal estimasi
+     * tiba TAPI belum berstatus diterima. Selalu false kalau Purchasing
+     * belum mengisi expected_arrival_date (opt-in, bukan wajib).
+     */
+    public function getIsOverdueAttribute(): bool
+    {
+        return $this->expected_arrival_date !== null
+            && $this->expected_arrival_date->isPast()
+            && ! in_array($this->status, self::RECEIVED_STATUSES, true);
+    }
+
+    public function getIsDueSoonAttribute(): bool
+    {
+        return $this->expected_arrival_date !== null
+            && ! $this->is_overdue
+            && ! in_array($this->status, self::RECEIVED_STATUSES, true)
+            && $this->expected_arrival_date->lte(now()->addDays(7));
     }
 
     public function purchaseOrderItem(): BelongsTo

@@ -45,6 +45,9 @@ $icons = [
     'clock' => '<circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" />',
     'inbox' => '<path d="M4 12.5h4.5l1.5 3h4l1.5-3H20" /><path d="M5.5 5.5h13l1.5 7v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6Z" />',
     'sliders' => '<line x1="4" y1="6" x2="20" y2="6" /><circle cx="9" cy="6" r="2" /><line x1="4" y1="12" x2="20" y2="12" /><circle cx="15" cy="12" r="2" /><line x1="4" y1="18" x2="20" y2="18" /><circle cx="7" cy="18" r="2" />',
+    'folder' => '<path d="M3.5 7a1.5 1.5 0 0 1 1.5-1.5h4l2 2.5h8a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17Z" />',
+    'bell' => '<path d="M12 4a1 1 0 0 0-1 1v.3A6.5 6.5 0 0 0 5.5 11.5v3L4 17.5h16L18.5 14.5v-3A6.5 6.5 0 0 0 13 5.3V5a1 1 0 0 0-1-1Z" /><path d="M9.5 20a2.5 2.5 0 0 0 5 0" />',
+    'history' => '<path d="M4 4.5v5h5" /><path d="M4.6 9.5A8 8 0 1 0 6 16.2" /><path d="M12 8v4.5l3 2" />',
 ];
 @endphp
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" {{ $attributes->merge(['class' => 'h-5 w-5']) }}>

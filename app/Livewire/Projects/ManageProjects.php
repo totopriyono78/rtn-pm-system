@@ -36,14 +36,20 @@ class ManageProjects extends Component
 
     public string $budget = '';
 
+    public string $projectValue = '';
+
     public string $startDate = '';
 
     public string $endDate = '';
 
     public string $status = 'planning';
 
+    public string $projectType = '';
+
     /** @var array */
     public $newDocuments = [];
+
+    public string $newDocumentCategory = 'lainnya';
 
     public function mount(): void
     {
@@ -57,7 +63,7 @@ class ManageProjects extends Component
     {
         $projects = Project::query()
             ->visibleTo(auth()->user())
-            ->with(['unit.region', 'pic', 'activities'])
+            ->with(['unit.region', 'pic', 'activities', 'directContract.customer', 'customerPurchaseOrder.customerQuotation.releaseOrder.contract.customer'])
             ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
             ->when($this->statusFilter, fn ($q) => $q->where('status', $this->statusFilter))
             ->latest()
@@ -69,7 +75,7 @@ class ManageProjects extends Component
             'pics' => User::role(['Project Manager', 'Administrator'])->orderBy('name')->get(),
             'canManage' => auth()->user()->hasPermissionTo('manage-projects'),
             'existingDocuments' => $this->editingId
-                ? ProjectDocument::where('project_id', $this->editingId)->latest()->get()
+                ? ProjectDocument::where('project_id', $this->editingId)->latestVersions()->latest()->get()
                 : collect(),
             'maxUploadMb' => (int) env('MAX_UPLOAD_SIZE_MB', 50),
         ]);
@@ -90,9 +96,11 @@ class ManageProjects extends Component
         $this->name = $project->name;
         $this->description = (string) $project->description;
         $this->budget = $project->budget !== null ? (string) $project->budget : '';
+        $this->projectValue = $project->project_value !== null ? (string) $project->project_value : '';
         $this->startDate = optional($project->start_date)->format('Y-m-d') ?? '';
         $this->endDate = optional($project->end_date)->format('Y-m-d') ?? '';
         $this->status = $project->status;
+        $this->projectType = (string) $project->type;
         $this->showModal = true;
     }
 
@@ -108,10 +116,13 @@ class ManageProjects extends Component
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'budget' => ['nullable', 'numeric', 'min:0'],
+            'projectValue' => ['nullable', 'numeric', 'min:0'],
             'startDate' => ['nullable', 'date'],
             'endDate' => ['nullable', 'date', 'after_or_equal:startDate'],
             'status' => ['required', Rule::in(array_keys(Project::STATUSES))],
+            'projectType' => ['nullable', Rule::in(array_keys(Project::TYPES))],
             'newDocuments.*' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,zip,jpg,jpeg,png', 'max:'.$maxKb],
+            'newDocumentCategory' => ['required', Rule::in(array_keys(ProjectDocument::CATEGORIES))],
         ]);
 
         $project = Project::updateOrCreate(['id' => $this->editingId], [
@@ -120,9 +131,11 @@ class ManageProjects extends Component
             'name' => $this->name,
             'description' => $this->description,
             'budget' => $this->budget !== '' ? $this->budget : null,
+            'project_value' => $this->projectValue !== '' ? $this->projectValue : null,
             'start_date' => $this->startDate ?: null,
             'end_date' => $this->endDate ?: null,
             'status' => $this->status,
+            'type' => $this->projectType ?: null,
         ]);
 
         foreach ($this->newDocuments as $file) {
@@ -130,12 +143,27 @@ class ManageProjects extends Component
                 continue;
             }
 
-            $path = $file->store("project-files/{$project->id}/Dokumen Proyek", 'local');
+            $categoryLabel = ProjectDocument::CATEGORIES[$this->newDocumentCategory] ?? ProjectDocument::CATEGORIES['lainnya'];
+            $originalName = $file->getClientOriginalName();
+
+            $path = $file->store("project-files/{$project->id}/{$categoryLabel}", 'local');
+
+            // Versioning: kalau sudah ada dokumen dengan kategori + nama file
+            // yang sama di proyek ini, anggap ini versi baru -- link ke versi
+            // sebelumnya lewat parent_document_id, bukan menimpa/menghapus.
+            $previous = $project->documents()
+                ->latestVersions()
+                ->where('category', $this->newDocumentCategory)
+                ->where('original_name', $originalName)
+                ->first();
 
             $project->documents()->create([
                 'uploaded_by' => auth()->id(),
+                'category' => $this->newDocumentCategory,
+                'version' => $previous ? $previous->version + 1 : 1,
+                'parent_document_id' => $previous?->id,
                 'disk_path' => $path,
-                'original_name' => $file->getClientOriginalName(),
+                'original_name' => $originalName,
                 'mime_type' => $file->getMimeType(),
                 'size_bytes' => $file->getSize(),
             ]);
@@ -159,8 +187,9 @@ class ManageProjects extends Component
 
     public function resetForm(): void
     {
-        $this->reset(['editingId', 'unitId', 'picUserId', 'name', 'description', 'budget', 'startDate', 'endDate', 'newDocuments']);
+        $this->reset(['editingId', 'unitId', 'picUserId', 'name', 'description', 'budget', 'projectValue', 'startDate', 'endDate', 'newDocuments', 'projectType']);
         $this->status = 'planning';
+        $this->newDocumentCategory = 'lainnya';
         $this->resetErrorBag();
     }
 }

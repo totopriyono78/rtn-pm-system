@@ -36,6 +36,7 @@
                         <th class="pb-2">Proyek</th>
                         <th class="pb-2">Lokasi</th>
                         <th class="pb-2">PIC</th>
+                        <th class="pb-2">Tipe</th>
                         <th class="pb-2">Status</th>
                         <th class="pb-2">Progress</th>
                         <th class="pb-2 text-right">Aksi</th>
@@ -46,8 +47,20 @@
                         <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
                             <td class="py-2 text-slate-400">{{ ($projects->currentPage() - 1) * $projects->perPage() + $loop->iteration }}</td>
                             <td class="py-2 font-medium"><a href="{{ route('projects.show', $p) }}" class="text-indigo-600 hover:underline">{{ $p->name }}</a></td>
-                            <td class="py-2 text-slate-500">{{ $p->unit->name }} &middot; {{ $p->unit->region->code }}</td>
+                            <td class="py-2 text-slate-500">
+                                {{ $p->unit->name }} &middot; {{ $p->unit->region->code }}
+                                @if ($p->customer)
+                                    <div class="text-xs text-indigo-500">{{ $p->customer->name }}</div>
+                                @endif
+                            </td>
                             <td class="py-2 text-slate-500">{{ $p->pic->name ?? '-' }}</td>
+                            <td class="py-2">
+                                @if ($p->type)
+                                    <span class="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700">{{ \App\Models\Project::TYPES[$p->type] }}</span>
+                                @else
+                                    <span class="text-slate-300">-</span>
+                                @endif
+                            </td>
                             <td class="py-2"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\Project::STATUSES[$p->status] }}</span></td>
                             <td class="py-2">
                                 <div class="flex items-center gap-2">
@@ -89,7 +102,7 @@
                         @error('name') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Lokasi (Unit)</label>
                             <select wire:model="unitId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -106,6 +119,15 @@
                                 <option value="">-- tanpa PIC --</option>
                                 @foreach ($pics as $pic)
                                     <option value="{{ $pic->id }}">{{ $pic->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Tipe Proyek</label>
+                            <select wire:model="projectType" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                <option value="">-- tidak ditentukan --</option>
+                                @foreach (\App\Models\Project::TYPES as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -133,6 +155,16 @@
 
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Nilai Proyek (Rp)</label>
+                            <div class="relative">
+                                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-slate-400">Rp</span>
+                                <input type="number" step="0.01" min="0" wire:model="projectValue" placeholder="Kosongkan jika belum diketahui"
+                                    class="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm">
+                            </div>
+                            <p class="mt-1 text-xs text-slate-400">Nilai kontrak/pekerjaan proyek ini. Dipakai untuk ringkasan Total Nilai Proyek di Dashboard.</p>
+                            @error('projectValue') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                        </div>
+                        <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Budget Proyek (Rp)</label>
                             <div class="relative">
                                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-slate-400">Rp</span>
@@ -142,24 +174,38 @@
                             <p class="mt-1 text-xs text-slate-400">Batas maksimal total nilai Purchase Order yang boleh diterbitkan Purchasing untuk proyek ini.</p>
                             @error('budget') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
                         </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Deskripsi</label>
-                            <textarea wire:model="description" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
-                        </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Deskripsi</label>
+                        <textarea wire:model="description" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
                     </div>
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Dokumen Proyek</label>
-                        <input type="file" wire:model="newDocuments" multiple class="block w-full text-sm">
-                        <div wire:loading wire:target="newDocuments" class="text-xs text-slate-400">Mengunggah...</div>
+                        <select wire:model="newDocumentCategory" class="mb-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            @foreach (\App\Models\ProjectDocument::CATEGORIES as $key => $label)
+                                <option value="{{ $key }}">Folder: {{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <input type="file" wire:model="newDocuments" multiple
+                            class="block w-full cursor-pointer rounded-lg border border-slate-300 p-2 text-sm text-slate-500 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-500">
+                        <p class="mt-1 text-xs text-slate-400">Bisa pilih lebih dari satu file — PDF, Word, Excel, ZIP, atau gambar. Mengunggah file dengan nama & folder yang sama akan tersimpan sebagai versi baru (riwayat versi lama tetap tersimpan).</p>
+                        <div wire:loading wire:target="newDocuments" class="mt-1 text-xs text-slate-400">Mengunggah...</div>
                         @error('newDocuments.*') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                        @error('newDocumentCategory') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
 
                         @if ($existingDocuments->isNotEmpty())
                             <ul class="mt-2 space-y-1">
                                 @foreach ($existingDocuments as $doc)
                                     <li class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
                                         <a href="{{ route('projects.documents.show', $doc) }}" class="flex min-w-0 items-center gap-1.5 truncate text-indigo-600 hover:underline" target="_blank">
-                                            <x-icon name="doc-text" class="h-3.5 w-3.5 shrink-0" /> {{ $doc->original_name }}
+                                            <x-icon name="doc-text" class="h-3.5 w-3.5 shrink-0" />
+                                            <span class="truncate">{{ $doc->original_name }}</span>
+                                            <span class="shrink-0 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-500">{{ $doc->categoryLabel() }}</span>
+                                            @if ($doc->version > 1)
+                                                <span class="shrink-0 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] text-indigo-600">v{{ $doc->version }}</span>
+                                            @endif
                                         </a>
                                         <button type="button" wire:click="removeDocument({{ $doc->id }})" wire:confirm="Hapus dokumen ini?" class="ml-2 flex shrink-0 items-center gap-1 rounded-lg px-1.5 py-0.5 text-red-500 transition-colors hover:bg-red-50">
                                             <x-icon name="trash" class="h-3.5 w-3.5" />

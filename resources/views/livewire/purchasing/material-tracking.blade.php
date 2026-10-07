@@ -31,6 +31,7 @@
                                 <th class="pb-2 pt-3">No. PO</th>
                                 <th class="pb-2 pt-3">Tanggal Pesan</th>
                                 <th class="pb-2 pt-3">Status</th>
+                                <th class="pb-2 pt-3">Estimasi Tiba</th>
                                 <th class="pb-2 pt-3">Diterima?</th>
                                 <th class="pb-2 pr-4 pt-3">Update Terakhir</th>
                             </tr>
@@ -38,7 +39,11 @@
                         <tbody>
                             @foreach ($group['items'] as $t)
                                 @php $po = $t->purchaseOrderItem?->purchaseOrder; @endphp
-                                <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
+                                <tr @class([
+                                    'border-t border-slate-100 transition-colors hover:bg-slate-50/70',
+                                    'bg-red-50/60' => $t->is_overdue,
+                                    'bg-amber-50/60' => $t->is_due_soon,
+                                ])>
                                     <td class="px-4 py-2 font-medium">{{ $t->item->name }}</td>
                                     <td class="py-2">{{ rtrim(rtrim(number_format($t->qty, 2), '0'), '.') }}</td>
                                     <td class="py-2 text-slate-500">
@@ -58,6 +63,27 @@
                                             </select>
                                         @else
                                             <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\MaterialTracking::STATUSES[$t->status] }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-2">
+                                        @if ($canManage)
+                                            <input
+                                                type="date"
+                                                value="{{ optional($t->expected_arrival_date)->format('Y-m-d') }}"
+                                                wire:change="updateExpectedArrival({{ $t->id }}, $event.target.value)"
+                                                class="rounded-lg border border-slate-300 px-2 py-1 text-xs"
+                                            >
+                                        @else
+                                            {{ optional($t->expected_arrival_date)->format('d M Y') ?? '-' }}
+                                        @endif
+                                        @if ($t->is_overdue)
+                                            <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700" title="Sudah lewat estimasi tiba, belum diterima">
+                                                <x-icon name="alert-circle" class="h-3 w-3" /> Terlambat
+                                            </span>
+                                        @elseif ($t->is_due_soon)
+                                            <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700" title="Estimasi tiba kurang dari 7 hari">
+                                                <x-icon name="clock" class="h-3 w-3" /> H-7
+                                            </span>
                                         @endif
                                     </td>
                                     <td class="py-2">

@@ -55,6 +55,7 @@ class MySchedule extends Component
         $hasCustomDateFilter = $this->dateFrom !== '' || $this->dateTo !== '';
 
         $assignments = Assignment::where('user_id', auth()->id())
+            ->approved()
             ->with('activity.project.unit.region')
             ->withCount(['reports as reported_today_count' => fn ($q) => $q->whereDate('report_date', $today)])
             // Default (tanpa filter tanggal manual): hanya penugasan yang activity-nya

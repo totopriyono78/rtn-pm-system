@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Activity;
 use App\Models\Assignment;
+use App\Models\CashAdvance;
 use App\Models\MaterialTracking;
 use App\Models\Project;
 use App\Models\RequestForQuotation;
@@ -53,14 +54,48 @@ class Dashboard extends Component
         $todaysAssignments = null;
         if ($user->hasPermissionTo('submit-report')) {
             $todaysAssignments = Assignment::where('user_id', $user->id)
+                ->approved()
                 ->whereDate('scheduled_date', today())
                 ->with('activity.project')
+                ->get();
+        }
+
+        // Usulan jadwal dari Lead Technician yang menunggu approval PM/Admin --
+        // dikumpulkan lintas proyek (sesuai region yang boleh dilihat user) supaya
+        // PM tidak perlu buka satu-satu Detail Proyek untuk menemukannya.
+        $pendingAssignmentApprovals = null;
+        if ($user->hasPermissionTo('manage-projects') || $user->hasPermissionTo('approve-assignments')) {
+            $pendingAssignmentApprovals = Assignment::where('status', 'diajukan')
+                ->whereHas('activity.project', fn ($q) => $q->visibleTo($user))
+                ->with('activity.project', 'user', 'creator')
+                ->oldest()
+                ->take(5)
                 ->get();
         }
 
         $pendingApprovals = null;
         if ($user->hasPermissionTo('approve-purchasing')) {
             $pendingApprovals = RequestForQuotation::where('status', 'submitted')->with('project')->latest()->take(5)->get();
+        }
+
+        // Kasbon yang menunggu approval PM/Administrator -- dikumpulkan
+        // lintas proyek, meniru pola widget usulan jadwal Lead Technician di
+        // atas supaya PM punya satu tempat untuk melihat semua approval yang
+        // menanti (jadwal + kasbon).
+        $pendingCashAdvances = null;
+        if ($user->hasPermissionTo('manage-cash-advances')) {
+            $pendingCashAdvances = CashAdvance::where('status', 'diajukan')
+                ->where(fn ($q) => $q->whereNull('project_id')->orWhereHas('project', fn ($p) => $p->visibleTo($user)))
+                ->with('project', 'requester')
+                ->oldest()
+                ->take(5)
+                ->get();
+        }
+
+        // ===== Total nilai proyek/pekerjaan (sisi pendapatan) — informasi finansial, sama seperti budget/harga =====
+        $totalProjectValue = null;
+        if ($user->hasPermissionTo('view-harga')) {
+            $totalProjectValue = (float) Project::query()->visibleTo($user)->sum('project_value');
         }
 
         // ===== Material yang sudah dipesan tapi belum diterima (belum "arrived"/"installed") =====
@@ -70,6 +105,23 @@ class Dashboard extends Component
                 ->whereIn('status', self::NOT_RECEIVED_STATUSES)
                 ->with(['item', 'project', 'purchaseOrderItem.purchaseOrder'])
                 ->oldest()
+                ->get();
+        }
+
+        // Activity yang mau mulai dalam 3 hari (H-3) tapi proyeknya belum
+        // pernah upload dokumen Simlok & SIKA sama sekali -- reminder
+        // kepatuhan sebelum teknisi masuk lokasi (SRS 4.9). Reuse scope
+        // visibleTo yang sama seperti widget reminder lain di atas.
+        $simlokReminders = null;
+        if ($user->hasPermissionTo('manage-projects')) {
+            $simlokReminders = Activity::where('status', 'belum_dimulai')
+                ->whereNotNull('start_date')
+                ->whereBetween('start_date', [now()->startOfDay(), now()->addDays(3)->endOfDay()])
+                ->whereHas('project', fn ($q) => $q->visibleTo($user))
+                ->whereDoesntHave('project.documents', fn ($q) => $q->where('category', 'simlok_sika'))
+                ->with('project')
+                ->orderBy('start_date')
+                ->take(5)
                 ->get();
         }
 
@@ -129,7 +181,11 @@ class Dashboard extends Component
             'projects' => $projects,
             'todaysAssignments' => $todaysAssignments,
             'pendingApprovals' => $pendingApprovals,
+            'pendingAssignmentApprovals' => $pendingAssignmentApprovals,
+            'pendingCashAdvances' => $pendingCashAdvances,
             'pendingMaterials' => $pendingMaterials,
+            'simlokReminders' => $simlokReminders,
+            'totalProjectValue' => $totalProjectValue,
             'totalProjects' => $visibleProjectIds->count(),
             'ongoingActivities' => Activity::whereIn('project_id', $visibleProjectIds)
                 ->where('status', 'sedang_dikerjakan')->count(),

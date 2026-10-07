@@ -18,6 +18,18 @@
             </div>
         </div>
 
+        @if ($totalProjectValue !== null)
+            <div class="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                    <x-icon name="wallet" class="h-5 w-5" />
+                </div>
+                <div class="min-w-0">
+                    <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Total Nilai Proyek</div>
+                    <div class="mt-1 truncate text-2xl font-semibold text-slate-800" title="Rp {{ number_format($totalProjectValue, 0, ',', '.') }}">Rp {{ number_format($totalProjectValue, 0, ',', '.') }}</div>
+                </div>
+            </div>
+        @endif
+
         <div class="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
                 <x-icon name="chart-bar" class="h-5 w-5" />
@@ -73,8 +85,77 @@
             </a>
         @endif
 
+        @if ($pendingAssignmentApprovals !== null)
+            @php $hasPendingAssignment = $pendingAssignmentApprovals->count() > 0; @endphp
+            <a
+                href="{{ route('projects.index') }}"
+                @class([
+                    'relative flex items-start gap-4 rounded-2xl border p-5 shadow-sm transition-colors',
+                    'border-amber-200 bg-amber-50 hover:bg-amber-100' => $hasPendingAssignment,
+                    'border-slate-100 bg-white hover:bg-slate-50' => ! $hasPendingAssignment,
+                ])
+            >
+                @if ($hasPendingAssignment)
+                    <span class="absolute right-3 top-3 flex h-2.5 w-2.5">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                    </span>
+                @endif
+                <div @class([
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                    'bg-amber-100 text-amber-600' => $hasPendingAssignment,
+                    'bg-violet-50 text-violet-600' => ! $hasPendingAssignment,
+                ])>
+                    <x-icon name="user-plus" class="h-5 w-5" />
+                </div>
+                <div class="min-w-0">
+                    <div @class(['text-xs font-medium uppercase tracking-wide', 'text-amber-700' => $hasPendingAssignment, 'text-slate-400' => ! $hasPendingAssignment])>Usulan Jadwal Teknisi</div>
+                    <div @class(['mt-1 text-2xl font-semibold', 'text-amber-800' => $hasPendingAssignment, 'text-slate-800' => ! $hasPendingAssignment])>{{ $pendingAssignmentApprovals->count() }}</div>
+                    @if ($hasPendingAssignment)
+                        <div class="mt-0.5 text-xs font-medium text-amber-700">Perlu tindakan Anda &rarr;</div>
+                    @endif
+                </div>
+            </a>
+        @endif
+
+        @if ($pendingCashAdvances !== null)
+            @php $hasPendingCashAdvance = $pendingCashAdvances->count() > 0; @endphp
+            <a
+                href="{{ route('admin.cash-advances') }}"
+                @class([
+                    'relative flex items-start gap-4 rounded-2xl border p-5 shadow-sm transition-colors',
+                    'border-amber-200 bg-amber-50 hover:bg-amber-100' => $hasPendingCashAdvance,
+                    'border-slate-100 bg-white hover:bg-slate-50' => ! $hasPendingCashAdvance,
+                ])
+            >
+                @if ($hasPendingCashAdvance)
+                    <span class="absolute right-3 top-3 flex h-2.5 w-2.5">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                    </span>
+                @endif
+                <div @class([
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                    'bg-amber-100 text-amber-600' => $hasPendingCashAdvance,
+                    'bg-violet-50 text-violet-600' => ! $hasPendingCashAdvance,
+                ])>
+                    <x-icon name="wallet" class="h-5 w-5" />
+                </div>
+                <div class="min-w-0">
+                    <div @class(['text-xs font-medium uppercase tracking-wide', 'text-amber-700' => $hasPendingCashAdvance, 'text-slate-400' => ! $hasPendingCashAdvance])>Kasbon Menunggu Approval</div>
+                    <div @class(['mt-1 text-2xl font-semibold', 'text-amber-800' => $hasPendingCashAdvance, 'text-slate-800' => ! $hasPendingCashAdvance])>{{ $pendingCashAdvances->count() }}</div>
+                    @if ($hasPendingCashAdvance)
+                        <div class="mt-0.5 text-xs font-medium text-amber-700">Perlu tindakan Anda &rarr;</div>
+                    @endif
+                </div>
+            </a>
+        @endif
+
         @if ($pendingMaterials !== null)
-            @php $hasPendingMaterial = $pendingMaterials->count() > 0; @endphp
+            @php
+                $hasPendingMaterial = $pendingMaterials->count() > 0;
+                $overdueMaterialCount = $pendingMaterials->where('is_overdue', true)->count();
+            @endphp
             <button
                 type="button"
                 wire:click="openPendingMaterial"
@@ -94,16 +175,51 @@
                 <div class="min-w-0">
                     <div @class(['text-xs font-medium uppercase tracking-wide', 'text-amber-700' => $hasPendingMaterial, 'text-slate-400' => ! $hasPendingMaterial])>Material Belum Diterima</div>
                     <div @class(['mt-1 text-2xl font-semibold', 'text-amber-800' => $hasPendingMaterial, 'text-slate-800' => ! $hasPendingMaterial])>{{ $pendingMaterials->count() }}</div>
-                    @if ($hasPendingMaterial)
+                    @if ($overdueMaterialCount > 0)
+                        <div class="mt-0.5 text-xs font-semibold text-red-700">{{ $overdueMaterialCount }} sudah lewat estimasi tiba (H-7) &rarr;</div>
+                    @elseif ($hasPendingMaterial)
                         <div class="mt-0.5 text-xs font-medium text-amber-700">Klik untuk lihat daftar &rarr;</div>
                     @endif
                 </div>
             </button>
         @endif
+
+        @if ($simlokReminders !== null)
+            @php $hasSimlokReminder = $simlokReminders->count() > 0; @endphp
+            <a
+                href="{{ route('projects.index') }}"
+                @class([
+                    'relative flex items-start gap-4 rounded-2xl border p-5 shadow-sm transition-colors',
+                    'border-amber-200 bg-amber-50 hover:bg-amber-100' => $hasSimlokReminder,
+                    'border-slate-100 bg-white hover:bg-slate-50' => ! $hasSimlokReminder,
+                ])
+            >
+                @if ($hasSimlokReminder)
+                    <span class="absolute right-3 top-3 flex h-2.5 w-2.5">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                    </span>
+                @endif
+                <div @class([
+                    'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                    'bg-amber-100 text-amber-600' => $hasSimlokReminder,
+                    'bg-violet-50 text-violet-600' => ! $hasSimlokReminder,
+                ])>
+                    <x-icon name="shield" class="h-5 w-5" />
+                </div>
+                <div class="min-w-0">
+                    <div @class(['text-xs font-medium uppercase tracking-wide', 'text-amber-700' => $hasSimlokReminder, 'text-slate-400' => ! $hasSimlokReminder])>Simlok &amp; SIKA Belum Ada (H-3)</div>
+                    <div @class(['mt-1 text-2xl font-semibold', 'text-amber-800' => $hasSimlokReminder, 'text-slate-800' => ! $hasSimlokReminder])>{{ $simlokReminders->count() }}</div>
+                    @if ($hasSimlokReminder)
+                        <div class="mt-0.5 text-xs font-medium text-amber-700">Activity mau mulai, izin belum diupload &rarr;</div>
+                    @endif
+                </div>
+            </a>
+        @endif
     </div>
 
     {{-- ===== Panel aksi cepat ===== --}}
-    @if (($todaysAssignments !== null && $todaysAssignments->isNotEmpty()) || ($pendingApprovals !== null && $pendingApprovals->isNotEmpty()))
+    @if (($todaysAssignments !== null && $todaysAssignments->isNotEmpty()) || ($pendingApprovals !== null && $pendingApprovals->isNotEmpty()) || ($pendingAssignmentApprovals !== null && $pendingAssignmentApprovals->isNotEmpty()) || ($pendingCashAdvances !== null && $pendingCashAdvances->isNotEmpty()) || ($simlokReminders !== null && $simlokReminders->isNotEmpty()))
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             @if ($todaysAssignments !== null && $todaysAssignments->isNotEmpty())
                 <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -136,6 +252,70 @@
                                 <div class="truncate text-slate-500">{{ $q->project->name }}</div>
                             </div>
                             <a href="{{ route('purchasing.rfq.show', $q) }}" class="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Tinjau &amp; Setujui</a>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            @if ($pendingAssignmentApprovals !== null && $pendingAssignmentApprovals->isNotEmpty())
+                <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            Usulan Jadwal Lead Technician
+                            <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-white">{{ $pendingAssignmentApprovals->count() }}</span>
+                        </h3>
+                        <a href="{{ route('projects.index') }}" class="text-xs font-medium text-indigo-600 hover:underline">Lihat semua proyek</a>
+                    </div>
+                    @foreach ($pendingAssignmentApprovals as $a)
+                        <div class="flex items-center justify-between border-t border-amber-100 py-2.5 text-sm first:border-0">
+                            <div class="min-w-0">
+                                <div class="truncate font-medium text-slate-800">{{ $a->user->name }} &middot; {{ $a->scheduled_date->format('d M Y') }}</div>
+                                <div class="truncate text-slate-500">{{ $a->activity->name }} &mdash; {{ $a->activity->project->name }}</div>
+                                <div class="truncate text-[11px] text-slate-400">Diusulkan oleh {{ $a->creator->name ?? '-' }}</div>
+                            </div>
+                            <a href="{{ route('projects.show', $a->activity->project) }}" class="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Tinjau &amp; Setujui</a>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            @if ($pendingCashAdvances !== null && $pendingCashAdvances->isNotEmpty())
+                <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            Kasbon Menunggu Approval
+                            <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-white">{{ $pendingCashAdvances->count() }}</span>
+                        </h3>
+                        <a href="{{ route('admin.cash-advances') }}" class="text-xs font-medium text-indigo-600 hover:underline">Lihat semua</a>
+                    </div>
+                    @foreach ($pendingCashAdvances as $ca)
+                        <div class="flex items-center justify-between border-t border-amber-100 py-2.5 text-sm first:border-0">
+                            <div class="min-w-0">
+                                <div class="truncate font-medium text-slate-800">{{ $ca->requester->name }} &middot; Rp {{ number_format((float) $ca->amount_requested, 0, ',', '.') }}</div>
+                                <div class="truncate text-slate-500">{{ $ca->project->name ?? 'Tanpa proyek spesifik' }}</div>
+                            </div>
+                            <a href="{{ route('admin.cash-advances') }}" class="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Tinjau &amp; Setujui</a>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            @if ($simlokReminders !== null && $simlokReminders->isNotEmpty())
+                <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            Simlok &amp; SIKA Belum Ada (H-3)
+                            <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-white">{{ $simlokReminders->count() }}</span>
+                        </h3>
+                        <a href="{{ route('projects.index') }}" class="text-xs font-medium text-indigo-600 hover:underline">Lihat semua proyek</a>
+                    </div>
+                    @foreach ($simlokReminders as $activity)
+                        <div class="flex items-center justify-between border-t border-amber-100 py-2.5 text-sm first:border-0">
+                            <div class="min-w-0">
+                                <div class="truncate font-medium text-slate-800">{{ $activity->name }} &middot; mulai {{ $activity->start_date->format('d M Y') }}</div>
+                                <div class="truncate text-slate-500">{{ $activity->project->name }}</div>
+                            </div>
+                            <a href="{{ route('projects.show', $activity->project) }}" class="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600">Upload Izin</a>
                         </div>
                     @endforeach
                 </div>
@@ -316,7 +496,10 @@
                             <tbody>
                                 @foreach ($pendingMaterials as $m)
                                     @php $po = $m->purchaseOrderItem?->purchaseOrder; @endphp
-                                    <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
+                                    <tr @class([
+                                        'border-t border-slate-100 transition-colors hover:bg-slate-50/70',
+                                        'bg-red-50/60' => $m->is_overdue,
+                                    ])>
                                         <td class="py-2 font-medium">{{ $m->item->name }}</td>
                                         <td class="py-2">
                                             <a href="{{ route('projects.show', $m->project) }}" class="text-indigo-600 hover:underline">{{ $m->project->name }}</a>
@@ -333,6 +516,15 @@
                                             <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                                                 <x-icon name="clock" class="h-3 w-3" /> {{ \App\Models\MaterialTracking::STATUSES[$m->status] }}
                                             </span>
+                                            @if ($m->is_overdue)
+                                                <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                                                    <x-icon name="alert-circle" class="h-3 w-3" /> Terlambat
+                                                </span>
+                                            @elseif ($m->is_due_soon)
+                                                <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                    H-7
+                                                </span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

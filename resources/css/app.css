@@ -6,6 +6,30 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Warna brand RTN -- diturunkan dari logo resmi (biru swoosh + navy wordmark + merah huruf RTN). */
+    --color-brand-blue-50: #eaf6fd;
+    --color-brand-blue-100: #d2eefc;
+    --color-brand-blue-200: #a6ddf9;
+    --color-brand-blue-300: #70cdf5;
+    --color-brand-blue-400: #3db8ea;
+    --color-brand-blue-500: #1e9bd6;
+    --color-brand-blue-600: #117cb3;
+    --color-brand-blue-700: #0b5f8c;
+    --color-brand-blue-800: #084363;
+    --color-brand-blue-900: #052c44;
+    --color-brand-blue-950: #002060;
+
+    --color-brand-red-50: #fdecec;
+    --color-brand-red-100: #fbd0d0;
+    --color-brand-red-200: #f5a3a3;
+    --color-brand-red-300: #ec7373;
+    --color-brand-red-400: #e04b42;
+    --color-brand-red-500: #d4291a;
+    --color-brand-red-600: #b81400;
+    --color-brand-red-700: #8f1000;
+    --color-brand-red-800: #6b0c00;
+    --color-brand-red-900: #4a0800;
 }
 
 [x-cloak] {

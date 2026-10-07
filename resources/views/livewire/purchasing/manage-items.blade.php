@@ -22,6 +22,7 @@
                         <th class="pb-2">Kode</th>
                         <th class="pb-2">Nama</th>
                         <th class="pb-2">Kategori</th>
+                        <th class="pb-2">Kompatibilitas</th>
                         <th class="pb-2">Satuan</th>
                         <th class="pb-2 text-right">Harga Satuan</th>
                         <th class="pb-2">Status</th>
@@ -34,6 +35,13 @@
                             <td class="py-2 font-medium">{{ $item->code }}</td>
                             <td class="py-2">{{ $item->name }}</td>
                             <td class="py-2 text-slate-500">{{ \App\Models\Item::CATEGORIES[$item->category] }}</td>
+                            <td class="py-2 text-xs text-slate-400">
+                                @if ($item->applicable_pump_type || $item->applicable_engine_type)
+                                    {{ $item->applicable_pump_type }}{{ $item->applicable_pump_type && $item->applicable_engine_type ? ' / ' : '' }}{{ $item->applicable_engine_type }}
+                                @else
+                                    <span class="italic">Generik (semua tipe)</span>
+                                @endif
+                            </td>
                             <td class="py-2 text-slate-500">{{ $item->unit_of_measure }}</td>
                             <td class="py-2 text-right">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
                             <td class="py-2">
@@ -54,7 +62,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7"><x-empty-state icon="cube" title="Belum ada item." /></td></tr>
+                        <tr><td colspan="8"><x-empty-state icon="cube" title="Belum ada item." /></td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -88,6 +96,27 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Khusus Tipe Pompa</label>
+                            <input type="text" wire:model="applicablePumpType" list="pump-type-options" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="kosongkan jika generik">
+                            <datalist id="pump-type-options">
+                                @foreach ($pumpTypes as $pt)
+                                    <option value="{{ $pt }}">
+                                @endforeach
+                            </datalist>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Khusus Tipe Engine</label>
+                            <input type="text" wire:model="applicableEngineType" list="engine-type-options" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="kosongkan jika generik">
+                            <datalist id="engine-type-options">
+                                @foreach ($engineTypes as $et)
+                                    <option value="{{ $et }}">
+                                @endforeach
+                            </datalist>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400">Kosongkan kedua kolom di atas untuk sparepart/material generik yang cocok semua tipe (mis. baut, sealant). Isi kalau item ini spesifik untuk tipe pompa/engine tertentu -- SRS 4.4.1.</p>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Satuan</label>

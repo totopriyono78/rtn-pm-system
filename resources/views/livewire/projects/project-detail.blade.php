@@ -6,6 +6,15 @@
             </a>
             <div class="mt-2">
                 <x-page-header icon="briefcase" color="indigo" :title="$project->name" :subtitle="$project->unit->name . ' · ' . $project->unit->region->name . ' · PIC: ' . ($project->pic->name ?? '-')" />
+                @if ($project->customer)
+                    <div class="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
+                        <x-icon name="building" class="h-3.5 w-3.5 text-slate-400" />
+                        Klien: <span class="font-medium text-slate-700">{{ $project->customer->name }}</span>
+                        @if ($project->sites->isNotEmpty())
+                            <span class="text-slate-400">&middot; {{ $project->sites->pluck('name')->join(', ') }}</span>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium">{{ \App\Models\Project::STATUSES[$project->status] }}</span>
@@ -77,22 +86,43 @@
         </div>
     @endif
 
-    @if ($project->documents->isNotEmpty())
+    @if ($documentsByCategory->isNotEmpty())
         <div class="rounded-xl bg-white p-4 shadow-sm">
-            <div class="mb-2 flex items-center gap-1.5 text-xs uppercase text-slate-400">
-                <x-icon name="doc-text" class="h-3.5 w-3.5" /> Dokumen Proyek
+            <div class="mb-3 flex items-center gap-1.5 text-xs uppercase text-slate-400">
+                <x-icon name="folder" class="h-3.5 w-3.5" /> Dokumen Proyek (Document Management)
             </div>
-            <ul class="flex flex-wrap gap-2">
-                @foreach ($project->documents as $doc)
-                    <li>
-                        <a href="{{ route('projects.documents.show', $doc) }}" target="_blank"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50">
-                            <x-icon name="doc-text" class="h-3.5 w-3.5 text-slate-400" />
-                            {{ $doc->original_name }}
-                        </a>
-                    </li>
+            <div class="space-y-4">
+                @foreach (\App\Models\ProjectDocument::CATEGORIES as $catKey => $catLabel)
+                    @continue (! $documentsByCategory->has($catKey))
+                    <div>
+                        <div class="mb-1.5 flex items-center justify-between">
+                            <div class="flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                                <x-icon name="folder" class="h-4 w-4 text-amber-500" /> {{ $catLabel }}
+                            </div>
+                            <a href="{{ route('projects.documents.zip', ['project' => $project->id, 'category' => $catKey]) }}"
+                                class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50">
+                                <x-icon name="download" class="h-3.5 w-3.5" /> Download Semua (ZIP)
+                            </a>
+                        </div>
+                        <ul class="flex flex-wrap gap-2">
+                            @foreach ($documentsByCategory[$catKey] as $doc)
+                                <li class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600">
+                                    <x-icon name="doc-text" class="h-3.5 w-3.5 text-slate-400" />
+                                    <a href="{{ route('projects.documents.show', ['projectDocument' => $doc->id, 'inline' => 1]) }}" target="_blank" class="hover:underline">
+                                        {{ $doc->original_name }}
+                                    </a>
+                                    @if ($doc->version > 1)
+                                        <span class="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] text-indigo-600">v{{ $doc->version }}</span>
+                                    @endif
+                                    <a href="{{ route('projects.documents.show', $doc) }}" class="ml-1 text-slate-400 hover:text-indigo-600" title="Download">
+                                        <x-icon name="download" class="h-3.5 w-3.5" />
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 @endforeach
-            </ul>
+            </div>
         </div>
     @endif
 
@@ -122,7 +152,14 @@
                     <div class="rounded-lg border border-slate-100 p-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <div class="font-medium text-slate-800">{{ $activity->name }}</div>
+                                <div class="font-medium text-slate-800">
+                                    {{ $activity->name }}
+                                    @if ($activity->site)
+                                        <span class="ml-1.5 inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-normal text-sky-700">
+                                            <x-icon name="map-pin" class="h-3 w-3" /> {{ $activity->site->name }}
+                                        </span>
+                                    @endif
+                                </div>
                                 <div class="text-xs text-slate-500">
                                     Rencana {{ number_format($activity->planned_hours, 1) }} jam &middot;
                                     Aktual {{ number_format($activity->actual_hours, 1) }} jam
@@ -138,17 +175,21 @@
                                             <option value="{{ $key }}" @selected($activity->status === $key)>{{ $label }}</option>
                                         @endforeach
                                     </select>
+                                @else
+                                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\Activity::STATUSES[$activity->status] }}</span>
+                                @endif
+                                @if ($canCreateAssignments)
                                     <button wire:click="openAssignTeknisi({{ $activity->id }})" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-50">
                                         <x-icon name="user-plus" class="h-3.5 w-3.5" /> Tugaskan
                                     </button>
+                                @endif
+                                @if ($canManage)
                                     <button wire:click="openEditActivity({{ $activity->id }})" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50">
                                         <x-icon name="edit" class="h-3.5 w-3.5" /> Edit
                                     </button>
                                     <button wire:click="deleteActivity({{ $activity->id }})" wire:confirm="Hapus activity ini?" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50">
                                         <x-icon name="trash" class="h-3.5 w-3.5" /> Hapus
                                     </button>
-                                @else
-                                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{{ \App\Models\Activity::STATUSES[$activity->status] }}</span>
                                 @endif
                             </div>
                         </div>
@@ -165,12 +206,42 @@
                         @if ($activity->assignments->isNotEmpty())
                             <div class="mt-2.5 flex flex-wrap gap-1.5">
                                 @foreach ($activity->assignments->sortByDesc('scheduled_date') as $assignment)
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 py-1 pl-2.5 pr-1.5 text-xs text-emerald-700">
+                                    @php
+                                        $pillClasses = match ($assignment->status) {
+                                            'diajukan' => 'bg-amber-50 text-amber-700',
+                                            'ditolak' => 'bg-red-50 text-red-700 line-through',
+                                            default => 'bg-emerald-50 text-emerald-700',
+                                        };
+                                        $dotClasses = match ($assignment->status) {
+                                            'diajukan' => 'text-amber-500',
+                                            'ditolak' => 'text-red-400',
+                                            default => 'text-emerald-500',
+                                        };
+                                    @endphp
+                                    <span
+                                        class="inline-flex items-center gap-1.5 rounded-full py-1 pl-2.5 pr-1.5 text-xs {{ $pillClasses }}"
+                                        @if ($assignment->status === 'ditolak' && $assignment->rejection_reason)
+                                            title="Alasan ditolak: {{ $assignment->rejection_reason }}"
+                                        @endif
+                                    >
                                         {{ $assignment->user->name }}
-                                        <span class="text-emerald-500">&middot; {{ $assignment->scheduled_date->format('d M') }}</span>
-                                        @if ($canManage)
-                                            <button wire:click="removeAssignment({{ $assignment->id }})" wire:confirm="Batalkan penugasan ini?" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-emerald-400 hover:bg-emerald-100 hover:text-emerald-700" title="Batalkan penugasan">
-                                                <x-icon name="x-mark" class="h-3 w-3" />
+                                        <span class="{{ $dotClasses }}">&middot; {{ $assignment->scheduled_date->format('d M') }}</span>
+                                        @if ($assignment->status === 'diajukan')
+                                            <span class="font-medium">&middot; Menunggu Approval</span>
+                                            @if ($canApproveAssignments)
+                                                <button wire:click="approveAssignment({{ $assignment->id }})" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-emerald-500 hover:bg-emerald-100" title="Setujui usulan">
+                                                    <x-icon name="check" class="h-3 w-3" />
+                                                </button>
+                                                <button wire:click="openRejectAssignment({{ $assignment->id }})" class="flex h-4 w-4 items-center justify-center rounded-full text-red-500 hover:bg-red-100" title="Tolak usulan">
+                                                    <x-icon name="x-mark" class="h-3 w-3" />
+                                                </button>
+                                            @endif
+                                        @elseif ($assignment->status === 'ditolak')
+                                            <span class="font-medium">&middot; Ditolak</span>
+                                        @endif
+                                        @if ($canManage || ($assignment->status === 'diajukan' && $assignment->created_by === auth()->id()))
+                                            <button wire:click="removeAssignment({{ $assignment->id }})" wire:confirm="Batalkan penugasan ini?" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700" title="Batalkan penugasan">
+                                                <x-icon name="trash" class="h-3 w-3" />
                                             </button>
                                         @endif
                                     </span>
@@ -286,44 +357,89 @@
     @if ($activeTab === 'reports')
         <div class="rounded-xl bg-white p-5 shadow-sm">
             @if ($canViewReports)
-                <table class="w-full text-left text-sm">
-                    <thead class="text-xs uppercase text-slate-400">
-                        <tr>
-                            <th class="pb-2">Tanggal</th>
-                            <th class="pb-2">Activity</th>
-                            <th class="pb-2">Teknisi</th>
-                            <th class="pb-2">Tipe</th>
-                            <th class="pb-2">Jam</th>
-                            <th class="pb-2">Berkas</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($reports as $report)
-                            <tr class="border-t border-slate-100 transition-colors hover:bg-slate-50/70">
-                                <td class="py-2">{{ $report->report_date->format('d M Y') }}</td>
-                                <td class="py-2">{{ $report->activity->name }}</td>
-                                <td class="py-2">{{ $report->user->name }}</td>
-                                <td class="py-2">{{ \App\Models\Report::TYPES[$report->type] }}</td>
-                                <td class="py-2">{{ $report->start_time }} - {{ $report->end_time }}</td>
-                                <td class="py-2 space-x-2">
-                                    @forelse ($report->files as $file)
-                                        <a href="{{ route('reports.files.show', $file) }}" class="inline-flex items-center gap-1 text-indigo-600 hover:underline">
-                                            <x-icon name="download" class="h-3.5 w-3.5" /> {{ \App\Models\ReportFile::CATEGORIES[$file->category] }}
-                                        </a>
-                                    @empty
-                                        <span class="text-slate-300">-</span>
-                                    @endforelse
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6"><x-empty-state icon="doc-text" title="Belum ada laporan." /></td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                @forelse ($reportsByDate as $dateKey => $dateReports)
+                    <div class="mb-5 last:mb-0">
+                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <x-icon name="calendar" class="h-3.5 w-3.5 text-slate-400" />
+                            {{ \Illuminate\Support\Carbon::parse($dateKey)->translatedFormat('l, d F Y') }}
+                            <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium normal-case text-slate-500">{{ $dateReports->count() }} laporan</span>
+                        </div>
+                        <div class="overflow-hidden overflow-x-auto rounded-lg border border-slate-100">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-xs uppercase text-slate-400">
+                                    <tr>
+                                        <th class="px-3 pb-2 pt-3">Activity</th>
+                                        <th class="pb-2 pt-3">Teknisi</th>
+                                        <th class="pb-2 pt-3">Tipe</th>
+                                        <th class="pb-2 pt-3">Jam</th>
+                                        <th class="pb-2 pr-3 pt-3">Berkas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($dateReports as $report)
+                                        @php $isFinal = $report->type === 'final'; @endphp
+                                        <tr @class([
+                                            'border-t border-slate-100 transition-colors',
+                                            'bg-amber-50/70 hover:bg-amber-50' => $isFinal,
+                                            'hover:bg-slate-50/70' => ! $isFinal,
+                                        ])>
+                                            <td class="px-3 py-2 {{ $isFinal ? 'font-medium text-slate-800' : '' }}">{{ $report->activity->name }}</td>
+                                            <td class="py-2">{{ $report->user->name }}</td>
+                                            <td class="py-2">
+                                                @if ($isFinal)
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                                                        <x-icon name="shield" class="h-3 w-3" /> Final Report
+                                                    </span>
+                                                @else
+                                                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{{ \App\Models\Report::TYPES[$report->type] }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="py-2">{{ $report->start_time }} - {{ $report->end_time }}</td>
+                                            <td class="py-2 pr-3 space-x-2">
+                                                @forelse ($report->files as $file)
+                                                    <a href="{{ route('reports.files.show', $file) }}" class="inline-flex items-center gap-1 text-indigo-600 hover:underline">
+                                                        <x-icon name="download" class="h-3.5 w-3.5" /> {{ \App\Models\ReportFile::CATEGORIES[$file->category] }}
+                                                    </a>
+                                                @empty
+                                                    <span class="text-slate-300">-</span>
+                                                @endforelse
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @empty
+                    <x-empty-state icon="doc-text" title="Belum ada laporan." />
+                @endforelse
             @else
                 <p class="text-sm text-slate-400">Anda tidak memiliki izin untuk melihat laporan.</p>
             @endif
         </div>
+
+        @if ($canViewReports)
+            <div class="mt-5 rounded-xl bg-white p-5 shadow-sm">
+                <h3 class="mb-3 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+                    <x-icon name="shield" class="h-4 w-4 text-emerald-500" /> Safety Talk / Toolbox Meeting
+                </h3>
+                @forelse ($safetyTalks as $log)
+                    <div class="flex items-start justify-between gap-3 border-t border-slate-100 py-2.5 text-sm first:border-0">
+                        <div class="min-w-0">
+                            <div class="font-medium text-slate-800">{{ $log->topic }}</div>
+                            <div class="text-slate-500">{{ $log->activity->name }} &middot; {{ $log->conductor->name }} &middot; {{ $log->meeting_date->format('d M Y') }}</div>
+                        </div>
+                        @if ($log->photo_disk_path)
+                            <a href="{{ route('safety-talks.photo', $log) }}" class="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:underline">
+                                <x-icon name="download" class="h-3.5 w-3.5" /> Foto
+                            </a>
+                        @endif
+                    </div>
+                @empty
+                    <x-empty-state icon="shield" title="Belum ada catatan Safety Talk untuk proyek ini." />
+                @endforelse
+            </div>
+        @endif
     @endif
 
     @if ($showActivityModal)
@@ -350,6 +466,16 @@
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Estimasi Jam (Rencana)</label>
                         <input type="number" step="0.5" min="0" wire:model="activityPlannedHours" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Site / Lokasi Tujuan</label>
+                        <select wire:model="activitySiteId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <option value="">-- tidak spesifik --</option>
+                            @foreach ($sites as $site)
+                                <option value="{{ $site->id }}">{{ $site->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-[11px] text-slate-400">Dipakai sebagai acuan koordinat &amp; radius saat teknisi presensi.</p>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -429,6 +555,29 @@
                         <span class="text-base font-semibold text-slate-800">Rp {{ number_format($project->used_budget, 0, ',', '.') }}</span>
                     </div>
                 @endif
+            </div>
+        </div>
+    @endif
+
+    @if ($showRejectModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showRejectModal', false)">
+            <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800">
+                    <x-icon name="x-mark" class="h-5 w-5 text-red-500" /> Tolak Usulan Jadwal
+                </h3>
+                <form wire:submit="saveRejectAssignment" class="space-y-4">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Alasan Penolakan</label>
+                        <textarea wire:model="rejectReason" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="mis. Teknisi sudah dijadwalkan di proyek lain tanggal tsb"></textarea>
+                        @error('rejectReason') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" wire:click="$set('showRejectModal', false)" class="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
+                            <x-icon name="x-mark" class="h-4 w-4" /> Tolak Usulan
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif

@@ -45,6 +45,14 @@ class SubmitReport extends Component
     /** @var array */
     public $drawings = [];
 
+    /**
+     * Notifikasi flash session di layout tidak ikut ter-render ulang saat
+     * Livewire memproses aksi lewat AJAX (yang di-refresh cuma markup
+     * komponen ini), jadi konfirmasi sukses dipakai lewat modal di dalam
+     * komponen sendiri supaya pasti terlihat oleh teknisi.
+     */
+    public bool $showSuccessModal = false;
+
     public function mount(): void
     {
         $this->reportDate = now()->format('Y-m-d');
@@ -53,6 +61,7 @@ class SubmitReport extends Component
     public function render()
     {
         $assignments = Assignment::where('user_id', Auth::id())
+            ->approved()
             ->with('activity.project')
             ->when(! $this->showCompletedActivities, function ($q) {
                 // Activity yang sudah "selesai" disembunyikan dari pilihan supaya daftar
@@ -92,7 +101,29 @@ class SubmitReport extends Component
             'drawings.*' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:'.$maxKb],
         ]);
 
-        $assignment = Assignment::where('user_id', Auth::id())->findOrFail($this->assignmentId);
+        if ($overlapping = $this->findOverlappingReport()) {
+            $existingStart = \Illuminate\Support\Carbon::parse($overlapping->start_time)->format('H:i');
+            $existingEnd = \Illuminate\Support\Carbon::parse($overlapping->end_time)->format('H:i');
+
+            $this->addError(
+                'endTime',
+                "Jam kerja ini bentrok dengan laporan lain Anda di tanggal yang sama: \"{$overlapping->activity->name}\" pukul {$existingStart}–{$existingEnd}. Satu orang tidak mungkin mengerjakan 2 tugas di jam yang sama — periksa kembali jam atau tanggalnya."
+            );
+
+            return;
+        }
+
+        $assignment = Assignment::where('user_id', Auth::id())->approved()->with('activity')->findOrFail($this->assignmentId);
+
+        // Presensi cuma diwajibkan kalau Activity-nya sudah diberi Site oleh PM —
+        // supaya activity lama yang belum diberi Site (site_id nullable, dirilis
+        // belakangan) tidak mendadak memblokir seluruh alur Submit Laporan yang
+        // sudah berjalan.
+        if ($assignment->activity->site_id && ! $assignment->attendance()->exists()) {
+            $this->addError('assignmentId', 'Anda belum presensi (check-in) untuk penugasan ini. Lakukan check-in di menu Presensi terlebih dahulu.');
+
+            return;
+        }
 
         DB::transaction(function () use ($assignment) {
             $report = Report::create([
@@ -130,6 +161,39 @@ class SubmitReport extends Component
         $this->reportDate = now()->format('Y-m-d');
         $this->startTime = '';
         $this->endTime = '';
+        $this->showSuccessModal = true;
+    }
+
+    /**
+     * Cari laporan lain milik teknisi yang sama, di tanggal yang sama, dengan
+     * jam kerja yang beririsan (overlap) dengan jam yang baru diisi.
+     *
+     * Satu orang tidak mungkin mengerjakan 2 tugas di jam yang sama — tanpa
+     * pengecekan ini, teknisi bisa lapor beberapa penugasan dengan jam yang
+     * tumpang tindih di hari yang sama, dan total "Jam Aktual" hariannya bisa
+     * membengkak tidak masuk akal (mis. 30 jam dalam 1 hari).
+     */
+    private function findOverlappingReport(): ?Report
+    {
+        $newStart = strtotime($this->reportDate.' '.$this->startTime);
+        $newEnd = strtotime($this->reportDate.' '.$this->endTime);
+
+        if ($newStart === false || $newEnd === false) {
+            return null;
+        }
+
+        return Report::where('user_id', Auth::id())
+            ->whereDate('report_date', $this->reportDate)
+            ->with('activity')
+            ->get()
+            ->first(function (Report $r) use ($newStart, $newEnd) {
+                $existingStart = strtotime($r->report_date->format('Y-m-d').' '.$r->start_time);
+                $existingEnd = strtotime($r->report_date->format('Y-m-d').' '.$r->end_time);
+
+                // Overlap kalau kedua rentang saling beririsan; bersinggungan tepat di
+                // batas (mis. selesai 12:00 lalu mulai lagi 12:00) tetap diperbolehkan.
+                return $existingStart < $newEnd && $existingEnd > $newStart;
+            });
     }
 
     private function storeFiles(Report $report, array $files, string $category, int $projectId): void

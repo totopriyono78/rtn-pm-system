@@ -56,7 +56,8 @@
             <label class="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
                 <x-icon name="doc-text" class="h-4 w-4 text-slate-400" /> Dokumen Laporan (PDF/DOCX/Video)
             </label>
-            <input type="file" wire:model="documents" multiple class="block w-full text-sm">
+            <input type="file" wire:model="documents" multiple
+                class="block w-full cursor-pointer rounded-lg border border-slate-300 p-2 text-sm text-slate-500 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-500">
             <div wire:loading wire:target="documents" class="text-xs text-slate-400">Mengunggah...</div>
             @error('documents.*') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
         </div>
@@ -65,7 +66,8 @@
             <label class="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
                 <x-icon name="package" class="h-4 w-4 text-slate-400" /> Foto Dokumentasi Lapangan
             </label>
-            <input type="file" wire:model="photos" multiple accept="image/*" class="block w-full text-sm">
+            <input type="file" wire:model="photos" multiple accept="image/*"
+                class="block w-full cursor-pointer rounded-lg border border-slate-300 p-2 text-sm text-slate-500 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-500">
             <div wire:loading wire:target="photos" class="text-xs text-slate-400">Mengunggah...</div>
             @error('photos.*') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
         </div>
@@ -74,7 +76,8 @@
             <label class="mb-1 flex items-center gap-1.5 text-sm font-medium text-slate-700">
                 <x-icon name="cube" class="h-4 w-4 text-slate-400" /> Drawing / As-built (opsional)
             </label>
-            <input type="file" wire:model="drawings" multiple class="block w-full text-sm">
+            <input type="file" wire:model="drawings" multiple
+                class="block w-full cursor-pointer rounded-lg border border-slate-300 p-2 text-sm text-slate-500 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-500">
             <div wire:loading wire:target="drawings" class="text-xs text-slate-400">Mengunggah...</div>
             @error('drawings.*') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
         </div>
@@ -84,4 +87,21 @@
             <x-icon name="check" class="h-4 w-4" /> Kirim Laporan
         </button>
     </form>
+
+    {{-- ===== Modal: konfirmasi laporan terkirim ===== --}}
+    @if ($showSuccessModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:click.self="$set('showSuccessModal', false)">
+            <div class="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-xl">
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                    <x-icon name="check" class="h-7 w-7" />
+                </div>
+                <h3 class="mt-4 text-lg font-semibold text-slate-800">Laporan Berhasil Dikirim</h3>
+                <p class="mt-1.5 text-sm text-slate-500">Laporan Anda sudah tersimpan di sistem. Form sudah dikosongkan kembali untuk laporan berikutnya.</p>
+                <button type="button" wire:click="$set('showSuccessModal', false)"
+                    class="mt-5 w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500">
+                    OK
+                </button>
+            </div>
+        </div>
+    @endif
 </div>

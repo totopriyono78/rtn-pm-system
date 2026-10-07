@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\ClientUser;
 
 return [
 
@@ -42,6 +43,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Guard terpisah untuk Client Portal (SRS 4.3) -- akun customer
+        // tidak boleh tercampur dengan akun karyawan internal (guard 'web').
+        'client' => [
+            'driver' => 'session',
+            'provider' => 'client_users',
+        ],
     ],
 
     /*
@@ -71,6 +79,11 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+
+        'client_users' => [
+            'driver' => 'eloquent',
+            'model' => ClientUser::class,
+        ],
     ],
 
     /*
@@ -100,6 +113,11 @@ return [
             'throttle' => 60,
         ],
     ],
+
+    // Catatan: reset password untuk Client Portal belum disediakan (SRS 4.3
+    // tidak mensyaratkannya) -- password akun client diset/diubah oleh
+    // Project Controller/Administrator lewat halaman Kelola Akun Client.
+
 
     /*
     |--------------------------------------------------------------------------

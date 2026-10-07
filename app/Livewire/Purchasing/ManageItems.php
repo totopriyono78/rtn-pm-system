@@ -25,6 +25,10 @@ class ManageItems extends Component
 
     public string $category = 'material';
 
+    public string $applicablePumpType = '';
+
+    public string $applicableEngineType = '';
+
     public string $unitOfMeasure = '';
 
     public string $unitPrice = '0';
@@ -38,8 +42,13 @@ class ManageItems extends Component
             ->orderBy('code')
             ->paginate(10);
 
+        $pumpTypes = \App\Models\PumpAsset::query()->whereNotNull('pump_type')->distinct()->orderBy('pump_type')->pluck('pump_type');
+        $engineTypes = \App\Models\PumpAsset::query()->whereNotNull('engine_type')->distinct()->orderBy('engine_type')->pluck('engine_type');
+
         return view('livewire.purchasing.manage-items', [
             'items' => $items,
+            'pumpTypes' => $pumpTypes,
+            'engineTypes' => $engineTypes,
         ]);
     }
 
@@ -56,6 +65,8 @@ class ManageItems extends Component
         $this->code = $item->code;
         $this->name = $item->name;
         $this->category = $item->category;
+        $this->applicablePumpType = (string) $item->applicable_pump_type;
+        $this->applicableEngineType = (string) $item->applicable_engine_type;
         $this->unitOfMeasure = $item->unit_of_measure;
         $this->unitPrice = (string) $item->unit_price;
         $this->isActive = $item->is_active;
@@ -68,6 +79,8 @@ class ManageItems extends Component
             'code' => ['required', 'string', 'max:50', Rule::unique('items', 'code')->ignore($this->editingId)],
             'name' => ['required', 'string', 'max:255'],
             'category' => ['required', Rule::in(array_keys(Item::CATEGORIES))],
+            'applicablePumpType' => ['nullable', 'string', 'max:255'],
+            'applicableEngineType' => ['nullable', 'string', 'max:255'],
             'unitOfMeasure' => ['required', 'string', 'max:20'],
             'unitPrice' => ['required', 'numeric', 'min:0'],
         ]);
@@ -76,6 +89,8 @@ class ManageItems extends Component
             'code' => $this->code,
             'name' => $this->name,
             'category' => $this->category,
+            'applicable_pump_type' => $this->applicablePumpType ?: null,
+            'applicable_engine_type' => $this->applicableEngineType ?: null,
             'unit_of_measure' => $this->unitOfMeasure,
             'unit_price' => $this->unitPrice,
             'is_active' => $this->isActive,
@@ -88,7 +103,7 @@ class ManageItems extends Component
 
     public function resetForm(): void
     {
-        $this->reset(['editingId', 'code', 'name', 'unitOfMeasure']);
+        $this->reset(['editingId', 'code', 'name', 'unitOfMeasure', 'applicablePumpType', 'applicableEngineType']);
         $this->category = 'material';
         $this->unitPrice = '0';
         $this->isActive = true;

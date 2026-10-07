@@ -66,6 +66,16 @@ class User extends Authenticatable
         return $this->hasMany(WorkLog::class);
     }
 
+    public function employeeSalary(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(EmployeeSalary::class);
+    }
+
+    public function payslips(): HasMany
+    {
+        return $this->hasMany(Payslip::class);
+    }
+
     /**
      * Apakah user boleh melihat proyek lintas region (tidak dibatasi region assignment).
      */

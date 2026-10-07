@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['project_id', 'name', 'status', 'planned_hours', 'order_no', 'start_date', 'end_date'])]
+#[Fillable(['project_id', 'site_id', 'name', 'status', 'planned_hours', 'order_no', 'start_date', 'end_date'])]
 class Activity extends Model
 {
     use HasFactory;
@@ -43,6 +43,11 @@ class Activity extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function site(): BelongsTo
+    {
+        return $this->belongsTo(Site::class);
+    }
+
     public function assignments(): HasMany
     {
         return $this->hasMany(Assignment::class);
@@ -56,6 +61,11 @@ class Activity extends Model
     public function workLogs(): HasMany
     {
         return $this->hasMany(WorkLog::class);
+    }
+
+    public function safetyTalks(): HasMany
+    {
+        return $this->hasMany(SafetyTalk::class)->latest('meeting_date');
     }
 
     public function getActualHoursAttribute(): float

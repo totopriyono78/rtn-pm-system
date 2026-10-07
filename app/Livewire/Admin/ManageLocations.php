@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Region;
+use App\Models\Site;
 use App\Models\Unit;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -33,11 +34,38 @@ class ManageLocations extends Component
 
     public string $unitName = '';
 
+    // Site form — lokasi fisik GPS untuk validasi radius presensi teknisi.
+    public bool $showSiteModal = false;
+
+    public ?int $editingSiteId = null;
+
+    public string $siteUnitId = '';
+
+    public string $siteCode = '';
+
+    public string $siteName = '';
+
+    public string $siteAddress = '';
+
+    public string $siteLatitude = '';
+
+    public string $siteLongitude = '';
+
+    public string $siteRadiusMeters = '200';
+
+    // Keputusan client 2026-10-07: radius bisa dimatikan total per site
+    // (presensi diterima dari mana saja), terpisah dari sekadar menaikkan
+    // angka radius_meters -- lihat Site::isWithinRadius().
+    public bool $siteRadiusCheckEnabled = true;
+
+    public bool $siteIsActive = true;
+
     public function render()
     {
         return view('livewire.admin.manage-locations', [
             'regions' => Region::withCount('units')->orderBy('name')->get(),
             'units' => Unit::with('region')->orderBy('name')->get(),
+            'sites' => Site::with('unit.region')->orderBy('name')->get(),
         ]);
     }
 
@@ -116,5 +144,70 @@ class ManageLocations extends Component
     {
         Unit::findOrFail($id)->delete();
         session()->flash('success', 'Unit dihapus.');
+    }
+
+    // ===== Site (lokasi fisik + GPS) =====
+
+    public function openCreateSite(): void
+    {
+        $this->reset(['editingSiteId', 'siteUnitId', 'siteCode', 'siteName', 'siteAddress', 'siteLatitude', 'siteLongitude']);
+        $this->siteRadiusMeters = '200';
+        $this->siteRadiusCheckEnabled = true;
+        $this->siteIsActive = true;
+        $this->showSiteModal = true;
+    }
+
+    public function openEditSite(int $id): void
+    {
+        $site = Site::findOrFail($id);
+        $this->editingSiteId = $site->id;
+        $this->siteUnitId = (string) $site->unit_id;
+        $this->siteCode = (string) $site->code;
+        $this->siteName = $site->name;
+        $this->siteAddress = (string) $site->address;
+        $this->siteLatitude = (string) $site->latitude;
+        $this->siteLongitude = (string) $site->longitude;
+        $this->siteRadiusMeters = (string) $site->radius_meters;
+        $this->siteRadiusCheckEnabled = $site->radius_check_enabled;
+        $this->siteIsActive = $site->is_active;
+        $this->showSiteModal = true;
+    }
+
+    public function saveSite(): void
+    {
+        $this->validate([
+            'siteUnitId' => ['nullable', Rule::exists('units', 'id')],
+            'siteCode' => ['nullable', 'string', 'max:50'],
+            'siteName' => ['required', 'string', 'max:255'],
+            'siteAddress' => ['nullable', 'string', 'max:1000'],
+            'siteLatitude' => ['required', 'numeric', 'between:-90,90'],
+            'siteLongitude' => ['required', 'numeric', 'between:-180,180'],
+            // Batas atas dinaikkan dari 5.000m jadi 100.000m (100km) --
+            // keputusan client 2026-10-07: admin bisa set radius "sangat
+            // luas" kalau ingin presensi longgar tanpa mematikan validasi
+            // sepenuhnya. Mematikan total pakai siteRadiusCheckEnabled.
+            'siteRadiusMeters' => ['required', 'integer', 'min:10', 'max:100000'],
+        ]);
+
+        Site::updateOrCreate(['id' => $this->editingSiteId], [
+            'unit_id' => $this->siteUnitId ?: null,
+            'code' => $this->siteCode ?: null,
+            'name' => $this->siteName,
+            'address' => $this->siteAddress ?: null,
+            'latitude' => $this->siteLatitude,
+            'longitude' => $this->siteLongitude,
+            'radius_meters' => $this->siteRadiusMeters,
+            'radius_check_enabled' => $this->siteRadiusCheckEnabled,
+            'is_active' => $this->siteIsActive,
+        ]);
+
+        $this->showSiteModal = false;
+        session()->flash('success', 'Site tersimpan.');
+    }
+
+    public function deleteSite(int $id): void
+    {
+        Site::findOrFail($id)->delete();
+        session()->flash('success', 'Site dihapus.');
     }
 }

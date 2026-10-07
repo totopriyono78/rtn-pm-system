@@ -25,11 +25,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
+            'client.active' => \App\Http\Middleware\EnsureClientIsActive::class,
         ]);
 
         $middleware->web(append: [
             \App\Http\Middleware\EnsureUserIsActive::class,
         ]);
+
+        // Client Portal (SRS 4.3) memakai guard 'client' sendiri -- tanpa ini,
+        // middleware 'auth:client' bawaan Laravel akan selalu redirect ke
+        // route('login') (halaman staf) begitu saja, tidak peduli guard mana
+        // yang dipakai, karena Authenticate::redirectTo() default hardcode
+        // ke 'login'. Arahkan balik ke login portal untuk path /portal/*.
+        $middleware->redirectGuestsTo(function ($request) {
+            return $request->is('portal/*') ? route('client.login') : route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
