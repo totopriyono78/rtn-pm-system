@@ -1,10 +1,13 @@
 import { initHeroCarousel } from './hero-carousel.js';
 import { initMobileMenu } from './mobile-menu.js';
+import { initSidebarScroll } from './sidebar-scroll.js';
 
-// Halaman Company Website (publik) adalah Blade biasa, bukan SPA -- cukup jalankan
-// sekali saat DOM siap. Kedua fungsi ini no-op (langsung return) kalau elemen yang
-// dicari tidak ada di halaman, jadi aman dipanggil di semua halaman publik.
+// File ini dipakai bersama oleh SEMUA layout (Company Website publik, Internal
+// Portal, Client Portal). Setiap fungsi di sini sengaja no-op (langsung return)
+// kalau elemen yang dicarinya tidak ada di halaman, jadi aman dipanggil sekali di
+// sini untuk semua halaman tanpa cek layout mana yang sedang aktif.
 document.addEventListener('DOMContentLoaded', () => {
     initHeroCarousel();
     initMobileMenu();
+    initSidebarScroll();
 });

@@ -102,7 +102,7 @@ class ClientPortalSampleSeeder extends Seeder
                 'start_date' => now()->subDays(40),
                 'end_date' => now()->addDays(50),
                 'status' => 'ongoing',
-                'type' => 'project',
+                'type' => 'overhaul',
             ]
         );
 

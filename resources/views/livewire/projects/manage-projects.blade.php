@@ -56,7 +56,7 @@
                             <td class="py-2 text-slate-500">{{ $p->pic->name ?? '-' }}</td>
                             <td class="py-2">
                                 @if ($p->type)
-                                    <span class="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700">{{ \App\Models\Project::TYPES[$p->type] }}</span>
+                                    <span class="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700">{{ \App\Models\Project::TYPES[$p->type] ?? $p->type }}</span>
                                 @else
                                     <span class="text-slate-300">-</span>
                                 @endif

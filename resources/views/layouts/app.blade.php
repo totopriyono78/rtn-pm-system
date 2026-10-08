@@ -25,8 +25,9 @@
     >
         {{-- ===== Sidebar (desktop) ===== --}}
         <aside
+            id="sidebar-desktop"
             :class="collapsed ? 'md:w-[76px]' : 'md:w-64'"
-            class="hidden shrink-0 flex-col border-r border-slate-800/60 bg-slate-900 text-slate-200 transition-[width] duration-200 ease-in-out md:flex"
+            class="hidden shrink-0 flex-col border-r border-slate-800/60 bg-slate-900 text-slate-200 transition-[width] duration-200 ease-in-out md:sticky md:top-0 md:flex md:h-screen md:self-start"
         >
             <div
                 class="flex h-16 shrink-0 items-center border-b border-slate-800/60 px-4"
